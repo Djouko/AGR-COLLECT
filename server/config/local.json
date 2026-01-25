@@ -1,0 +1,14 @@
+{
+  "default": {
+    "database": {
+      "host": "127.0.0.1",
+      "port": 5432,
+      "user": "odk",
+      "password": "odk",
+      "database": "odk"
+    },
+    "env": {
+      "domain": "http://localhost:8989"
+    }
+  }
+}
