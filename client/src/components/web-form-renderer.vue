@@ -30,12 +30,12 @@ except according to the terms contained in the LICENSE file.
               <pre>{{ submissionModal.errorMessage }}</pre>
           </template>
           <template #supportEmail>
-            <a href="emailto:support@getodk.org">support@getodk.org</a>
+            <a href="emailto:support@agr-collect.local">support@agr-collect.local</a>
           </template>
         </i18n-t>
         <i18n-t v-else-if="submissionModal.type === 'retryModal'" tag="p" keypath="retryModal.body">
           <template #supportEmail>
-            <a href="emailto:support@getodk.org">support@getodk.org</a>
+            <a href="emailto:support@agr-collect.local">support@agr-collect.local</a>
           </template>
         </i18n-t>
         <i18n-t v-else-if="submissionModal.type === 'sessionTimeoutModal'" tag="p" keypath="sessionTimeoutModal.body.full">

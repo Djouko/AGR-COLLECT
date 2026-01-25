@@ -117,7 +117,7 @@ export default {
 {
   "en": {
     // This is the title at the top of a pop-up. "Client" refers to a data
-    // collection client like ODK Collect. "Code" refers to a QR code.
+    // collection client like AGR-Collect Mobile. "Code" refers to a QR code.
     "title": {
       "managed": "Client Configuration Code",
       "legacy": "Legacy Client Configuration Code"
@@ -134,9 +134,9 @@ export default {
         }
       },
       {
-        // "Get Blank Form" is the text of a button in ODK Collect.
+        // "Get Blank Form" is the text of a button in AGR-Collect Mobile.
         "managed": "Collect will exactly match the Forms available to “{displayName}” including automatically applying updates. Users will not need to manually Get Blank Forms. Additionally, finalized Forms will be sent automatically as soon as a connection is found.",
-        // "Get Blank Form" and "Send Finalized Form" are the text of buttons in ODK Collect.
+        // "Get Blank Form" and "Send Finalized Form" are the text of buttons in AGR-Collect Mobile.
         "legacy": "Users will have to manually Get Blank Forms on the device and determine which Forms to update. They will also need to manually Send Finalized Forms."
       },
       {
@@ -386,7 +386,7 @@ export default {
         }
       },
       {
-        "managed": "ODK Collectは、「{displayName}」で利用可能なフォームと完全に一致し、アップデートも自動的に適用されます。ユーザーが手動で空フォームを取得する必要はありません。さらに、インターネット接続が見つかった時点で、確定済のフォームが自動的に送信されます。",
+        "managed": "AGR-Collect Mobileは、「{displayName}」で利用可能なフォームと完全に一致し、アップデートも自動的に適用されます。ユーザーが手動で空フォームを取得する必要はありません。さらに、インターネット接続が見つかった時点で、確定済のフォームが自動的に送信されます。",
         "legacy": "ユーザーは、手動で端末に空フォームを取得し、更新するフォームを決定する必要があります。また、確定済フォームを手動で提出する必要があります。"
       },
       {

@@ -277,9 +277,9 @@
     "learnMore": "了解更多。"
   },
   "analytics": {
-    "alwaysImprove": "我們一直努力改進 ODK Central.",
+    "alwaysImprove": "我們一直努力改進 AGR-Collect.",
     "needFeedback": {
-      "full": "為此，我們需要 {your} 的回饋，以便我們了解您如何使用 ODK Central，以及它如何對您更好。",
+      "full": "為此，我們需要 {your} 的回饋，以便我們了解您如何使用 AGR-Collect，以及它如何對您更好。",
       "your": "您"
     },
     "mailingListOptIn": "請不定期寄送電子郵件給我，告知新功能與最佳實踐。"

@@ -360,7 +360,7 @@
     "learnMore": "Learn more."
   },
   "analytics": {
-    "alwaysImprove": "We are always trying to improve ODK Central.",
+    "alwaysImprove": "We are always trying to improve AGR-Collect.",
     "needFeedback": {
       // "This" refers to improving Central.
       "full": "To do this, we need {your} feedback, so that we can understand how you are using Central, and how it could be better for you.",

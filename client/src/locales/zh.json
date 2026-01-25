@@ -277,9 +277,9 @@
     "learnMore": "了解更多。"
   },
   "analytics": {
-    "alwaysImprove": "我们一直努力改进ODK Central",
+    "alwaysImprove": "我们一直努力改进AGR-Collect",
     "needFeedback": {
-      "full": "为此，我们需要{your}评价，以便我们了解您是如何使用ODK Central的，以及如何更好的为您服务",
+      "full": "为此，我们需要{your}评价，以便我们了解您是如何使用AGR-Collect的，以及如何更好的为您服务",
       "your": "您的"
     },
     "mailingListOptIn": "不定期向我发送有关新功能和最佳实践的电子邮件。"

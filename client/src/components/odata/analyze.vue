@@ -61,7 +61,7 @@ except according to the terms contained in the LICENSE file.
         </i18n-t>
         <i18n-t v-else-if="tool === 'python'" tag="p" keypath="help.python">
           <template #pyODK>
-            <a href="https://docs.getodk.org/pyodk/" target="_blank" rel="noopener">pyODK</a>
+            <a href="https://docs.agr-collect.local/pyodk/" target="_blank" rel="noopener">pyODK</a>
           </template>
         </i18n-t>
         <i18n-t v-else-if="tool === 'r'" tag="p" keypath="help.r">
@@ -71,7 +71,7 @@ except according to the terms contained in the LICENSE file.
         </i18n-t>
         <i18n-t v-else-if="tool === 'other'" tag="p" keypath="help.other.full">
           <template #article>
-            <a href="https://docs.getodk.org/central-api-odata-endpoints/" target="_blank" rel="noopener">{{ $t('help.other.article') }}</a>
+            <a href="https://docs.agr-collect.local/central-api-odata-endpoints/" target="_blank" rel="noopener">{{ $t('help.other.article') }}</a>
           </template>
         </i18n-t>
       </div>

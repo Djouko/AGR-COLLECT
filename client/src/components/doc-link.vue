@@ -24,7 +24,7 @@ export default {
   },
   computed: {
     href() {
-      return `https://docs.getodk.org/${this.to}`;
+      return `https://docs.agr-collect.local/${this.to}`;
     }
   }
 };

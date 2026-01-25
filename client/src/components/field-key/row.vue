@@ -91,7 +91,7 @@ export default {
 <i18n lang="json5">
 {
   "en": {
-    // Clicking on this text displays an App User QR code for configuring ODK Collect.
+    // Clicking on this text displays an App User QR code for configuring AGR-Collect Mobile.
     "seeCode": "See code",
     // This text is shown for an App User whose access has been revoked.
     "accessRevoked": "Access revoked",

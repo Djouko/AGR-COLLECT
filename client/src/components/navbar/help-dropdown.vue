@@ -20,7 +20,7 @@ except according to the terms contained in the LICENSE file.
         <doc-link to="central-intro/">{{ $t('common.docs') }}</doc-link>
       </li>
       <li>
-        <a href="https://forum.getodk.org/" target="_blank">{{ $t('common.forum') }}</a>
+        <a href="https://forum.agr-collect.local/" target="_blank">{{ $t('common.forum') }}</a>
       </li>
       <li>
         <a href="/version.txt" target="_blank">{{ $t('common.version') }}</a>

@@ -33,7 +33,7 @@ except according to the terms contained in the LICENSE file.
           </a>
         </template>
         <template #previewYourForm>
-          <a href="https://getodk.org/web-forms-preview/" target="_blank">
+          <a href="https://agr-collect.local/web-forms-preview/" target="_blank">
             {{ $t('webformsConfirmation.description.previewYourForm') }}
           </a>
         </template>

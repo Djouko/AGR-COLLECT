@@ -83,7 +83,7 @@ const { projectPath } = useRoutes();
     // This is the title at the top of a pop-up. "Code" refers to a QR code.
     "title": "Testing Code",
     // @transifexKey component.FormDraftTesting.collectProjectName
-    // This text will be shown in ODK Collect when testing a Draft Form. {name}
+    // This text will be shown in AGR-Collect Mobile when testing a Draft Form. {name}
     // is the title of the Draft Form.
     "collectProjectName": "[Draft] {name}",
     "introduction": {

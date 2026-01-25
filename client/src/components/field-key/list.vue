@@ -18,7 +18,7 @@ except according to the terms contained in the LICENSE file.
       </button>
       <i18n-t tag="p" keypath="heading[0].full">
         <template #collect>
-          <doc-link to="collect-intro/">ODK Collect</doc-link>
+          <doc-link to="collect-intro/">AGR-Collect Mobile</doc-link>
         </template>
         <template #formAccess>
           <router-link :to="projectPath('form-access')">{{ $t('heading[0].formAccess') }}</router-link>
@@ -194,7 +194,7 @@ export default {
     },
     "heading": [
       {
-        // {collect} is a link whose text is "ODK Collect".
+        // {collect} is a link whose text is "AGR-Collect Mobile".
         "full": "App Users are used to collect data from an application such as {collect}. They typically represent a shared role such as “Vaccinator” but may also represent individuals. App Users in this Project can only download and use Forms within this Project. When you create a new App User, it will not have access to any Forms at first. To set the Forms each App User may access, use the {formAccess} tab.",
         "formAccess": "Form Access"
       },
@@ -205,7 +205,7 @@ export default {
     ],
     "header": {
       "lastUsed": "Last Used",
-      // Header for the table column that shows QR codes to configure data collection clients such as ODK Collect.
+      // Header for the table column that shows QR codes to configure data collection clients such as AGR-Collect Mobile.
       "configureClient": "Configure Client"
     },
     "emptyTable": "There are no App Users yet. You will need to create some to download Forms and submit data from your device.",

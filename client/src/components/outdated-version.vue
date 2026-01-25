@@ -15,7 +15,7 @@ except according to the terms contained in the LICENSE file.
     <iframe :src="iframeSrc" :title="$t('title')"></iframe>
 
     <a class="btn btn-primary"
-      href="https://docs.getodk.org/central-upgrade/"
+      href="https://docs.agr-collect.local/central-upgrade/"
       target="_blank"
       v-tooltip.aria-describedby="$t('instructionsToUpgradeTooltip')">
         {{ $t('instructionsToUpgrade') }}

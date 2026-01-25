@@ -27,7 +27,7 @@ except according to the terms contained in the LICENSE file.
               </a>
             </template>
             <template #collect>
-              <doc-link to="collect-intro/">ODK Collect</doc-link>
+              <doc-link to="collect-intro/">AGR-Collect Mobile</doc-link>
             </template>
           </i18n-t>
           <i18n-t tag="li" keypath="introduction[2].full">
@@ -96,7 +96,7 @@ const { projectPath, formPath } = useRoutes();
       "There are several options for submitting data to ODK Central:",
       {
         // This text is shown in a list of options for submitting data.
-        // {collect} is a link whose text is "ODK Collect".
+        // {collect} is a link whose text is "AGR-Collect Mobile".
         "full": "Create {appUsers} and use the {collect} Android application. This is most appropriate when data collectors need access to multiple Forms, are offline, or you have a complex Form.",
         "appUsers": "App Users"
       },
