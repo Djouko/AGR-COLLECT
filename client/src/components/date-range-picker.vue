@@ -1,14 +1,3 @@
-<!--
-Copyright 2020 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <label id="date-range-picker-container" class="date-range-picker form-group" :class="{ disabled }">
     <span class="icon-calendar"></span>
@@ -56,7 +45,6 @@ import 'flatpickr/dist/l10n/zh-tw';
 import { locales } from '../i18n';
 import { requiredLabel } from '../util/dom';
 
-// Map locales.
 const l10ns = {};
 for (const locale of locales.keys()) {
   const l10n = flatpickr.l10ns[locale];
@@ -68,7 +56,6 @@ export default {
   name: 'DateRangePicker',
   components: { flatpickr: flatpickrComponent },
   props: {
-    // Either an array of two DateTime objects or an empty array
     modelValue: {
       type: Array,
       required: true
@@ -81,7 +68,6 @@ export default {
       type: String,
       required: true
     },
-    // Displayed when no date is selected
     placeholder: {
       type: String,
       required: true
@@ -101,9 +87,6 @@ export default {
   },
   data() {
     return {
-      // We initialize this.flatpickrValue as an array of Date objects, but
-      // vue-flatpickr-component will replace it with a string when the user
-      // makes a selection.
       flatpickrValue: this.modelValue.map(dateTime => dateTime.toJSDate()),
       displayValue: ''
     };
@@ -112,7 +95,6 @@ export default {
     config() {
       return {
         mode: 'range',
-        // See https://github.com/flatpickr/flatpickr/issues/1549
         dateFormat: 'Y/m/d',
         locale: l10ns[this.$i18n.locale] ?? l10ns[this.$i18n.fallbackLocale],
         clickOpens: !this.disabled
@@ -128,23 +110,12 @@ export default {
     this.setDisplayValue();
   },
   methods: {
-    // Converts an array of Date objects from a selection to an array of
-    // DateTime objects. If the selection was incomplete -- if fewer dates were
-    // selected than expected -- then default values will be used for one or
-    // both DateTime objects. Returns the DateTime objects along with an
-    // indicator of whether the selection was complete.
     selectedDatesToDateTimes(dates) {
-      // dates.length === 0 if the user opens the calendar, clears the selection
-      // (for example, by pressing backspace), then closes the calendar. (There
-      // doesn't seem to be an easy way to turn off this behavior for if
-      // this.required is `true`.)
       if (dates.length === 0) {
         if (!this.required) return [dates, true];
         const today = DateTime.local().startOf('day');
         return [[today, today], false];
       }
-      // dates.length === 1 if the user opens the calendar, selects a date, then
-      // closes the calendar without selecting a second date.
       if (dates.length === 1) {
         const dateTime = DateTime.fromJSDate(dates[0]);
         return [[dateTime, dateTime], false];
@@ -161,20 +132,12 @@ export default {
       if (!newEqualsOld) {
         this.$emit('update:modelValue', newValue);
       } else if (!complete) {
-        // newValue represents a complete selection. That means that since the
-        // actual selection was incomplete, it does not match newValue. Because
-        // of that, even though this.modelValue will not change, we still need
-        // to set this.flatpickrValue.
         this.flatpickrValue = newValue.map(dateTime => dateTime.toJSDate());
       }
     },
     clear() {
       this.$emit('update:modelValue', []);
 
-      // The .close button will be hidden, so we focus the flatpickr input.
-      // Focusing it will open the calendar, which we don't want, so we
-      // immediately close the calendar using the approach described here:
-      // https://github.com/ankurk91/vue-flatpickr-component/issues/33
       this.$refs.flatpickr.$el.focus();
       this.$refs.flatpickr.fp.close();
     },
@@ -195,8 +158,6 @@ export default {
 @import '../assets/scss/mixins';
 @import '../assets/scss/variables';
 
-// The flatpickr input is readonly by default, but we do not want to style it as
-// readonly.
 .form-group .flatpickr-input[readonly] {
   color: $color-input;
 
@@ -211,7 +172,6 @@ export default {
   width: 87px;
 
   &.has-value {
-    // Leave space for the .close button.
     width: 207px;
     &.required { width: 193px };
   }
@@ -235,12 +195,11 @@ export default {
   }
   .icon-angle-down {
     font-size: 16px;
-    color: #555555;
+    color: #6b7280;
     font-weight: bold;
     vertical-align: -4px;
   }
 
-  // hide the flatpickr because we can't its width to fit-content
   .form-control {
     position: absolute;
     opacity: 0;

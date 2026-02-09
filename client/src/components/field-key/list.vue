@@ -1,14 +1,3 @@
-<!--
-Copyright 2017 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div>
     <div class="heading-with-button">
@@ -30,6 +19,16 @@ except according to the terms contained in the LICENSE file.
         </template>
       </i18n-t>
     </div>
+    
+    <!-- Search field -->
+    <div class="panel-simple">
+      <div class="search-field">
+        <input v-model="searchQuery" type="text" class="form-control"
+          :placeholder="$t('searchPlaceholder')" />
+        <span class="icon-search"></span>
+      </div>
+    </div>
+    
     <table id="field-key-list-table" class="table">
       <thead>
         <tr>
@@ -41,10 +40,13 @@ except according to the terms contained in the LICENSE file.
         </tr>
       </thead>
       <tbody v-if="fieldKeys.dataExists">
-        <field-key-row v-for="fieldKey of fieldKeys" :key="fieldKey.id"
+        <field-key-row v-for="fieldKey of filteredFieldKeys" :key="fieldKey.id"
           :field-key="fieldKey" :highlighted="highlighted"
           @toggle-qr="togglePopover"
-          @revoke="revokeModal.show({ fieldKey: $event })"/>
+          @revoke="revokeModal.show({ fieldKey: $event })"
+          @restore="restoreModal.show({ fieldKey: $event })"
+          @edit="editModal.show({ fieldKey: $event })"
+          @delete="deleteModal.show({ fieldKey: $event })"/>
       </tbody>
     </table>
     <loading :state="fieldKeys.initiallyLoading"/>
@@ -63,6 +65,12 @@ except according to the terms contained in the LICENSE file.
       @hide="submissionOptions.hide()"/>
     <field-key-revoke v-bind="revokeModal" @hide="revokeModal.hide()"
       @success="afterRevoke"/>
+    <field-key-restore v-bind="restoreModal" @hide="restoreModal.hide()"
+      @success="afterRestore"/>
+    <field-key-edit v-bind="editModal" @hide="editModal.hide()"
+      @success="afterEdit"/>
+    <field-key-delete v-bind="deleteModal" @hide="deleteModal.hide()"
+      @success="afterDelete"/>
   </div>
 </template>
 
@@ -74,6 +82,9 @@ import FieldKeyQrPanel from './qr-panel.vue';
 import FieldKeyRow from './row.vue';
 import FieldKeyNew from './new.vue';
 import FieldKeyRevoke from './revoke.vue';
+import FieldKeyRestore from './restore.vue';
+import FieldKeyEdit from './edit.vue';
+import FieldKeyDelete from './delete.vue';
 import ProjectSubmissionOptions from '../project/submission-options.vue';
 
 import useRoutes from '../../composables/routes';
@@ -90,6 +101,9 @@ export default {
     FieldKeyRow,
     FieldKeyNew,
     FieldKeyRevoke,
+    FieldKeyRestore,
+    FieldKeyEdit,
+    FieldKeyDelete,
     ProjectSubmissionOptions
   },
   inject: ['alert'],
@@ -111,6 +125,8 @@ export default {
       highlighted: null,
       // `true` to show a managed QR code; `false` to show a legacy QR code.
       managed: true,
+      // Search query for filtering
+      searchQuery: '',
       popover: {
         target: null,
         fieldKey: null
@@ -118,8 +134,21 @@ export default {
       // Modals
       createModal: modalData(),
       submissionOptions: modalData(),
-      revokeModal: modalData()
+      revokeModal: modalData(),
+      restoreModal: modalData(),
+      editModal: modalData(),
+      deleteModal: modalData()
     };
+  },
+  computed: {
+    filteredFieldKeys() {
+      if (!this.fieldKeys.dataExists) return [];
+      if (!this.searchQuery.trim()) return this.fieldKeys;
+      const query = this.searchQuery.toLowerCase().trim();
+      return this.fieldKeys.filter(fk => 
+        fk.displayName.toLowerCase().includes(query)
+      );
+    }
   },
   created() {
     this.fetchData(false);
@@ -171,6 +200,21 @@ export default {
       this.fetchData(true);
       this.revokeModal.hide();
       this.alert.success(this.$t('alert.revoke', fieldKey));
+    },
+    afterRestore(fieldKey) {
+      this.fetchData(true);
+      this.restoreModal.hide();
+      this.alert.success(this.$t('alert.restore', fieldKey));
+    },
+    afterEdit(fieldKey) {
+      this.fetchData(true);
+      this.editModal.hide();
+      this.alert.success(this.$t('alert.edit', fieldKey));
+    },
+    afterDelete(fieldKey) {
+      this.fetchData(true);
+      this.deleteModal.hide();
+      this.alert.success(this.$t('alert.delete', fieldKey));
     }
   }
 };
@@ -179,8 +223,40 @@ export default {
 <style lang="scss">
 @import '../../assets/scss/variables';
 
+.search-field {
+  position: relative;
+  max-width: 300px;
+  
+  input {
+    padding-right: 30px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    font-size: 13px;
+    &:focus {
+      border-color: #2e7d32;
+      box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.1);
+    }
+  }
+  
+  .icon-search {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+  }
+}
+
 #field-key-list-table {
   table-layout: fixed;
+
+  th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #6b7280;
+    font-weight: 600;
+  }
 
   th.actions { width: 125px; }
 }
@@ -208,16 +284,19 @@ export default {
       // Header for the table column that shows QR codes to configure data collection clients such as AGR-Collect Mobile.
       "configureClient": "Configure Client"
     },
+    "searchPlaceholder": "Search App Users...",
     "emptyTable": "There are no App Users yet. You will need to create some to download Forms and submit data from your device.",
     "alert": {
-      "create": "The App User “{displayName}” was created successfully.",
-      "revoke": "App User {displayName}’s access successfully revoked."
+      "create": "The App User \"{displayName}\" was created successfully.",
+      "revoke": "App User {displayName}'s access successfully revoked.",
+      "restore": "App User {displayName}'s access successfully restored.",
+      "edit": "App User {displayName} was successfully updated.",
+      "delete": "App User {displayName} was successfully deleted."
     }
   }
 }
 </i18n>
 
-<!-- Autogenerated by destructure.js -->
 <i18n>
 {
   "cs": {

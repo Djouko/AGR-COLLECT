@@ -1,49 +1,95 @@
-<!--
-Copyright 2017 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
-  <div id="account-login" class="row">
-    <div class="col-xs-12 col-sm-offset-3 col-sm-6">
-      <div class="panel panel-default panel-main">
-        <div class="panel-heading">
-          <h1 class="panel-title">{{ $t('action.logIn') }}</h1>
-        </div>
-        <div v-if="config.oidcEnabled" class="panel-body">
-          <p>{{ $t('oidc.body') }}</p>
-          <div class="panel-footer">
-            <a :href="oidcLoginPath" class="btn btn-primary"
-              :class="{ disabled }" @click="loginByOIDC">
-              {{ $t('action.continue') }} <spinner :state="disabled"/>
-            </a>
+  <div id="account-login">
+    <div class="login-brand-panel">
+      <div class="brand-content">
+        <div class="brand-logo-wrap">
+          <div class="brand-logo">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="18" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+              <circle cx="20" cy="20" r="8" fill="rgba(255,255,255,0.9)"/>
+              <circle cx="20" cy="8" r="3" fill="rgba(255,255,255,0.7)"/>
+              <circle cx="30" cy="26" r="3" fill="rgba(255,255,255,0.7)"/>
+              <circle cx="10" cy="26" r="3" fill="rgba(255,255,255,0.7)"/>
+              <line x1="20" y1="12" x2="20" y2="11" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+              <line x1="27" y1="24" x2="24" y2="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+              <line x1="13" y1="24" x2="16" y2="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+            </svg>
           </div>
         </div>
-        <div v-else class="panel-body">
+        <h1 class="brand-title">AGR-Collect</h1>
+        <p class="brand-tagline">Plateforme de collecte de données terrain</p>
+        <div class="brand-features">
+          <div class="feature-item">
+            <span class="feature-dot"></span>
+            <span>Collecte hors-ligne & synchronisation</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-dot"></span>
+            <span>Géolocalisation & traçabilité</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-dot"></span>
+            <span>Rapports & analyses en temps réel</span>
+          </div>
+        </div>
+        <div class="brand-footer">
+          <span>SAAHDEL</span>
+        </div>
+      </div>
+      <div class="brand-decoration">
+        <div class="deco-circle deco-1"></div>
+        <div class="deco-circle deco-2"></div>
+        <div class="deco-circle deco-3"></div>
+      </div>
+    </div>
+    <div class="login-form-panel">
+      <div class="auth-locale-selector">
+        <button type="button" class="locale-toggle" @click="localeOpen = !localeOpen">
+          {{ currentLocaleName }} <span class="caret"></span>
+        </button>
+        <ul v-if="localeOpen" class="locale-menu">
+          <li v-for="[tag, info] of availableLocales" :key="tag">
+            <a href="#" @click.prevent="switchLocale(tag)">{{ info.name }}</a>
+          </li>
+        </ul>
+      </div>
+      <div class="form-panel-inner">
+        <div class="form-header">
+          <h2>{{ $t('title.welcome') }}</h2>
+          <p>{{ $t('title.subtitle') }}</p>
+        </div>
+        <div v-if="config.oidcEnabled" class="form-content">
+          <p class="oidc-text">{{ $t('oidc.body') }}</p>
+          <a :href="oidcLoginPath" class="btn-submit"
+            :class="{ disabled }" @click="loginByOIDC">
+            {{ $t('action.continue') }} <spinner :state="disabled"/>
+          </a>
+        </div>
+        <div v-else class="form-content">
           <form @submit.prevent="submit">
-            <form-group ref="email" v-model.trim="email" type="email"
-              :placeholder="$t('field.email')" required autocomplete="off"/>
-            <form-group v-model="password" type="password"
-              :placeholder="$t('field.password')" required
-              autocomplete="current-password"/>
+            <label class="field-label">{{ $t('label.email') }}</label>
+            <div class="field-wrap">
+              <form-group ref="email" v-model.trim="email" type="email"
+                :placeholder="$t('field.email')" required autocomplete="off"/>
+            </div>
+            <label class="field-label">{{ $t('label.password') }}</label>
+            <div class="field-wrap">
+              <form-group v-model="password" type="password"
+                :placeholder="$t('field.password')" required
+                autocomplete="current-password"/>
+            </div>
             <div v-if="showMailingListOptIn" id="mailing-list-opt-in" class="checkbox">
               <label>
                 <input v-model="mailingListOptIn" type="checkbox">{{ $t('analytics.mailingListOptIn') }}
               </label>
             </div>
-            <div class="panel-footer">
-              <button type="submit" class="btn btn-primary"
-                :aria-disabled="disabled">
-                {{ $t('action.logIn') }} <spinner :state="disabled"/>
-              </button>
+            <button type="submit" class="btn-submit"
+              :aria-disabled="disabled">
+              {{ $t('action.logIn') }} <spinner :state="disabled"/>
+            </button>
+            <div class="form-links">
               <router-link v-slot="{ navigate }" to="/reset-password" custom>
-                <button type="button" class="btn btn-link" :aria-disabled="disabled"
+                <button type="button" class="link-forgot" :aria-disabled="disabled"
                   @click="navigate">
                   {{ $t('action.resetPassword') }}
                 </button>
@@ -62,6 +108,8 @@ import Spinner from '../spinner.vue';
 
 import { enketoBasePath, noop } from '../../util/util';
 import { localStore } from '../../util/storage';
+import { loadLocale } from '../../util/i18n';
+import { locales } from '../../i18n';
 import { logIn } from '../../util/session';
 import { queryString } from '../../util/request';
 import { useRequestData } from '../../request-data';
@@ -83,9 +131,17 @@ export default {
       email: '',
       password: '',
       mailingListOptIn: true,
+      localeOpen: false,
     };
   },
   computed: {
+    availableLocales() {
+      return locales;
+    },
+    currentLocaleName() {
+      const info = locales.get(this.$i18n.locale);
+      return info ? info.name : this.$i18n.locale;
+    },
     oidcLoginPath() {
       const { query } = this.$route;
       const next = typeof query.next === 'string' ? query.next : null;
@@ -110,6 +166,12 @@ export default {
       window.removeEventListener('pageshow', this.reenableIfPersisted);
   },
   methods: {
+    switchLocale(locale) {
+      loadLocale(this.container, locale)
+        .then(() => { localStore.setItem('locale', locale); })
+        .catch(noop);
+      this.localeOpen = false;
+    },
     verifyNewSession() {
       const sessionExpires = localStore.getItem('sessionExpires');
       const newSession = sessionExpires == null ||
@@ -133,8 +195,6 @@ export default {
 
       const { oidcError, ...queryWithoutError } = this.$route.query;
       if (oidcError === undefined) return;
-      // Remove the query parameter so that if the user refreshes the page, the
-      // alert that we are about to show is not shown again.
       await this.$router.replace({ path: '/login', query: queryWithoutError });
 
       if (typeof oidcError === 'string' && /^[\w-]+$/.test(oidcError)) {
@@ -143,24 +203,10 @@ export default {
           this.alert.danger(this.$t(path));
       }
     },
-    /* Pressing the back button on the IdP login page may restore Frontend from
-    the back/forward cache. In that case, this.disabled would still be `true` --
-    a confusing state for the user to return to. Instead, if the user comes back
-    from the IdP, we set this.disabled to `false`, re-enabling the component.
-    This method may be called in other cases as well, for example, if the user
-    presses back on the Frontend login page, then presses forward to return to
-    Frontend. It should be OK to set this.disabled to `false` in any such case:
-    there's no real issue if the link ends up getting clicked multiple times. */
     reenableIfPersisted(event) {
       if (event.persisted) this.disabled = false;
     },
-    navigateToNext(
-      next,
-      // Function that redirects within Frontend
-      internal,
-      // Function that redirects outside Frontend
-      external
-    ) {
+    navigateToNext(next, internal, external) {
       if (typeof next !== 'string') return internal('/');
       let url;
       try {
@@ -193,10 +239,6 @@ export default {
           this.navigateToNext(
             this.$route.query.next,
             (location) => {
-              // We only set this.disabled to `false` before redirecting within
-              // Frontend. If we also set this.disabled before redirecting
-              // outside Frontend, the buttons might be re-enabled before the
-              // external page is loaded.
               this.disabled = false;
               const message = this.$t('alert.changePassword');
               this.$router.replace(location)
@@ -218,9 +260,395 @@ export default {
 };
 </script>
 
+<style lang="scss">
+@import '../../assets/scss/variables';
+
+#account-login {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  background: #fff;
+
+  .login-brand-panel {
+    flex: 0 0 45%;
+    background: linear-gradient(160deg, #0a2e14 0%, #14532d 40%, #166534 70%, #1a7a3a 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 60px 48px;
+
+    .brand-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      max-width: 380px;
+    }
+
+    .brand-logo-wrap {
+      margin-bottom: 32px;
+    }
+
+    .brand-logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(12px);
+
+      svg {
+        width: 44px;
+        height: 44px;
+      }
+    }
+
+    .brand-title {
+      margin: 0 0 10px;
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+
+    .brand-tagline {
+      margin: 0 0 48px;
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    .brand-features {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 60px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.1px;
+    }
+
+    .feature-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+      flex-shrink: 0;
+    }
+
+    .brand-footer {
+      span {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.3);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+    }
+
+    .brand-decoration {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .deco-circle {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .deco-1 {
+      width: 500px;
+      height: 500px;
+      top: -15%;
+      right: -25%;
+    }
+
+    .deco-2 {
+      width: 350px;
+      height: 350px;
+      bottom: -10%;
+      left: -15%;
+    }
+
+    .deco-3 {
+      width: 200px;
+      height: 200px;
+      top: 50%;
+      left: 60%;
+      background: radial-gradient(circle, rgba(74, 222, 128, 0.06) 0%, transparent 70%);
+    }
+  }
+
+  .login-form-panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    background: #fff;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .auth-locale-selector {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    z-index: 10;
+
+    .locale-toggle {
+      background: none;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+
+      &:hover {
+        border-color: #d1d5db;
+        background: #f9fafb;
+      }
+
+      .caret {
+        margin-left: 4px;
+      }
+    }
+
+    .locale-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      list-style: none;
+      padding: 4px 0;
+      min-width: 160px;
+      max-height: 300px;
+      overflow-y: auto;
+
+      li a {
+        display: block;
+        padding: 7px 16px;
+        font-size: 13px;
+        color: #374151;
+        text-decoration: none;
+        transition: background 0.1s ease;
+
+        &:hover {
+          background: #f3f4f6;
+        }
+      }
+    }
+  }
+
+  .form-panel-inner {
+    width: 100%;
+    max-width: 380px;
+  }
+
+  .form-header {
+    margin-bottom: 36px;
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+      font-size: 15px;
+      color: #6b7280;
+      font-weight: 400;
+    }
+  }
+
+  .field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+    letter-spacing: 0.01em;
+  }
+
+  .field-wrap {
+    margin-bottom: 20px;
+
+    .form-group {
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .form-control {
+      height: 46px;
+      border-radius: 10px;
+      border: 1.5px solid #d1d5db;
+      font-size: 15px;
+      padding: 0 14px;
+      background: #fff;
+      color: #111827;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+      &:focus {
+        border-color: #16a34a;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+        outline: none;
+      }
+
+      &::placeholder { color: #9ca3af; }
+    }
+  }
+
+  #mailing-list-opt-in {
+    margin: -8px 0 20px;
+    label { font-size: 13px; color: #6b7280; font-weight: 400; }
+  }
+
+  .btn-submit {
+    display: block;
+    width: 100%;
+    padding: 13px 24px;
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+    margin-top: 4px;
+
+    &:hover {
+      background: #15803d;
+      box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+      color: #fff;
+      text-decoration: none;
+    }
+
+    &:active {
+      background: #166534;
+      box-shadow: none;
+    }
+
+    &[aria-disabled="true"], &.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+
+  .form-links {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .link-forgot {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #16a34a;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s ease;
+
+    &:hover { color: #15803d; text-decoration: underline; }
+    &[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+  }
+
+  .oidc-text {
+    color: #6b7280;
+    font-size: 15px;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 900px) {
+  #account-login {
+    flex-direction: column;
+
+    .login-brand-panel {
+      flex: none;
+      padding: 40px 32px 32px;
+
+      .brand-features, .brand-footer { display: none; }
+      .brand-tagline { margin-bottom: 0; }
+      .brand-logo { width: 56px; height: 56px; border-radius: 16px; svg { width: 30px; height: 30px; } }
+      .brand-logo-wrap { margin-bottom: 16px; }
+      .brand-title { font-size: 24px; margin-bottom: 6px; }
+      .brand-tagline { font-size: 13px; }
+    }
+
+    .login-form-panel {
+      padding: 32px 24px;
+      align-items: flex-start;
+    }
+
+    .form-panel-inner { max-width: 100%; }
+    .form-header { margin-bottom: 28px; h2 { font-size: 22px; } }
+  }
+}
+
+@media (max-width: 480px) {
+  #account-login {
+    .login-brand-panel {
+      padding: 28px 20px 24px;
+      .brand-logo { width: 48px; height: 48px; border-radius: 14px; }
+      .brand-logo-wrap { margin-bottom: 12px; }
+      .brand-title { font-size: 20px; }
+      .brand-tagline { font-size: 12px; }
+    }
+
+    .login-form-panel { padding: 24px 20px; }
+    .form-header { margin-bottom: 24px; h2 { font-size: 20px; } }
+  }
+}
+</style>
+
 <i18n lang="json5">
 {
   "en": {
+    "title": {
+      "welcome": "Sign in to your account",
+      "subtitle": "Enter your credentials to continue."
+    },
+    "label": {
+      "email": "Email address",
+      "password": "Password"
+    },
     "alert": {
       "alreadyLoggedIn": "A user is already logged in. Please refresh the page to continue.",
       "changePassword": "To protect your account, make sure your password is 10 characters or longer."
@@ -228,9 +656,9 @@ export default {
     "oidc": {
       "body": "Click Continue to proceed to the login page.",
       "error": {
-        "auth-ok-user-not-found": "There is no Central account associated with your email address. Please ask your Central administrator to create an account for you to continue.",
+        "auth-ok-user-not-found": "There is no account associated with your email address. Please ask your administrator to create an account for you to continue.",
         "email-not-verified": "Your email address has not been verified by your login server. Please contact your server administrator.",
-        "email-claim-not-provided": "Central could not access the email address associated with your account. This could be because your server administrator has configured something incorrectly, or has not set an email address for your account. It could also be the result of privacy options that you can choose during the login process. If so, please try again and ensure that your email is shared.",
+        "email-claim-not-provided": "The system could not access the email address associated with your account. This could be because your server administrator has configured something incorrectly, or has not set an email address for your account. It could also be the result of privacy options that you can choose during the login process. If so, please try again and ensure that your email is shared.",
         "internal-server-error": "Something went wrong during login. Please contact your server administrator."
       }
     },
@@ -241,7 +669,6 @@ export default {
 }
 </i18n>
 
-<!-- Autogenerated by destructure.js -->
 <i18n>
 {
   "cs": {

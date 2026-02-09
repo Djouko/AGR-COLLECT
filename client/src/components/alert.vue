@@ -1,14 +1,3 @@
-<!--
-Copyright 2017 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div :key="alert.messageId" class="alert" role="alert">
     <div class="alert-message"><span>{{ alert.message }}</span></div>
@@ -58,8 +47,10 @@ const cta = computed(() => props.alert.cta);
   display: flex;
   align-items: center;
 
-  border-radius: 4px;
+  border-radius: 8px;
   margin-bottom: 15px;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .alert > div {
@@ -79,7 +70,6 @@ const cta = computed(() => props.alert.cta);
 }
 
 .alert-cta-container {
-  // Needed for Spinner
   position: relative;
 }
 

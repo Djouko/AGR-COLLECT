@@ -1,14 +1,3 @@
-<!--
-Copyright 2025 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div id="map-view" ref="el">
     <Loading :state="geojson.initiallyLoading || showingMap"
@@ -45,7 +34,6 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  // Loading message
   loading: {
     type: String,
     required: true
@@ -57,12 +45,6 @@ const GeojsonMap = defineAsyncComponent(loadAsync('GeojsonMap'));
 const { createResource } = useRequestData();
 const geojson = createResource('geojson', () => ({
   transformResponse: ({ data, config }) => {
-    // After the GeoJSON response is received, we also set `odata`, as if we
-    // received an OData response. That's needed because `odata` drives much of
-    // the logic in SubmissionList (and EntityList). For a long time,
-    // SubmissionList was only a table and only cared about OData. When we set
-    // `odata`, we set as little data as possible in order to minimize the
-    // memory footprint.
     const { features } = data;
     props.odata.setFromResponse({
       data: {
@@ -72,7 +54,6 @@ const geojson = createResource('geojson', () => ({
       config
     });
 
-    // After setting `odata`, return the GeoJSON unchanged.
     return data;
   }
 }));
@@ -85,19 +66,15 @@ const fetchData = (clear = true) => {
 };
 fetchData();
 watch(() => props.url, noargs(fetchData));
-// For defineExpose()
 const cancelFetch = () => { geojson.cancelRequest(); };
 
 const showingMap = ref(false);
 const setShowing = (value) => { showingMap.value = value; };
 watch(() => geojson.dataExists, (dataExists) => {
-  // We need to set showingMap.value to `false` if the data is cleared between
-  // the `show` and `shown` events of the GeojsonMap.
   if (!dataExists) setShowing(false);
 });
 
 const el = useTemplateRef('el');
-// Stretches the map to the bottom of the screen.
 const sizeMap = () => {
   const rect = el.value.getBoundingClientRect();
   if (rect.height === 0) return '';
@@ -152,7 +129,7 @@ defineExpose({ fetchData, cancelFetch, afterDelete });
 #map-view {
   position: relative;
 
-  .loading { color: #555; }
+  .loading { color: #6b7280; }
   .page-section:has(&) { margin-bottom: 15px; }
 }
 </style>

@@ -1,14 +1,3 @@
-<!--
-Copyright 2017 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div id="page-head" class="row">
     <div class="col-xs-12">
@@ -34,8 +23,9 @@ defineOptions({
 @import '../../assets/scss/variables';
 
 #page-head {
-  background-color: $color-subpanel-background;
-  border-bottom: 1px solid $color-subpanel-border-strong;
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .breadcrumbs + #page-head .h1 {
@@ -44,8 +34,8 @@ defineOptions({
 }
 
 #page-head-title-infonav {
-  padding-top: 5px;
-  padding-bottom: 20px;
+  padding-top: 14px;
+  padding-bottom: 16px;
   display: flex;
   align-items: center;
 }
@@ -53,16 +43,17 @@ defineOptions({
 #page-head-title {
   overflow-wrap: break-word;
   overflow: hidden;
+  color: #111827;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-#page-head-body {
-  color: #555;
-  font-size: 15px;
+#page-head-body, #page-description {
+  color: #6b7280;
+  font-size: 14px;
   letter-spacing: -0.01em;
-  // If #page-head-body is empty, this margin will collapse with the bottom
-  // margin of #page-head-title. As a result, there will always be exactly 15px
-  // between #page-head-tabs and the previous visible element.
-  margin-bottom: 15px;
+  margin-bottom: 12px;
+  line-height: 1.5;
 }
 
 #page-head-tabs {
@@ -71,13 +62,20 @@ defineOptions({
       display: none;
     }
 
+    > a {
+      &, &:hover, &:focus {
+        border-bottom-width: 3px;
+      }
+    }
+
     &.active > a {
       &, &:hover, &:focus {
-        background-color: $color-subpanel-active;
+        background-color: transparent;
+        font-weight: 600;
       }
     }
   }
 
-  .badge { margin-left: 2px; }
+  .badge { margin-left: 3px; }
 }
 </style>

@@ -1,14 +1,3 @@
-<!--
-Copyright 2025 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div class="btn-group">
     <button v-if="project.verbs.has('entity.delete')" type="button"
@@ -37,7 +26,6 @@ except according to the terms contained in the LICENSE file.
 </template>
 
 <script setup>
-// This component is tested via the tests of EntityMetadataRow.
 
 import { computed, inject } from 'vue';
 
@@ -60,8 +48,6 @@ const props = defineProps({
 const datasetName = inject('datasetName');
 
 const { i18n } = inject('container');
-// The component assumes that this data will exist when the component is
-// created.
 const { project } = useRequestData();
 
 const updateLabel = computed(() => i18n.t('submission.action.edit', {

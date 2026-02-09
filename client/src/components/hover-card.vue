@@ -1,14 +1,3 @@
-<!--
-Copyright 2024 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div ref="el" class="hover-card">
     <div class="hover-card-heading">
@@ -54,18 +43,12 @@ const props = defineProps({
 });
 
 const el = ref(null);
-// Returns the desired width of .hover-card-body based on the width of the <dl>.
-// Returning 0 means that the default width should be used.
 const computeWidth = (body) => {
   const dt = body.querySelector('dt');
   if (dt == null) return 0;
 
   const dtWidth = dt.getBoundingClientRect().width;
   const ddWidth = body.querySelector('dd').getBoundingClientRect().width;
-  // Don't give the <dd> elements the same width as the <dt> elements unless
-  // they need it. The <dt> elements are already making the hover card wider
-  // than the default. The width of the <dd> elements is allowed to grow up to
-  // the width of the <dt> elements, but it shouldn't grow beyond what it needs.
   return dtWidth + Math.min(dtWidth, ddWidth);
 };
 const resize = () => {
@@ -76,11 +59,6 @@ const resize = () => {
   const currentWidth = body.getBoundingClientRect().width -
     box.borderLeft - box.borderRight;
 
-  // Hide siblings of .hover-card-body (i.e., .hover-card-heading and
-  // .hover-card-footer) before setting `width: auto`. That way, we can compute
-  // the width of the hover card based on the width of .hover-card-body alone.
-  // For example, we don't want .hover-card-title to influence the width of the
-  // hover card.
   const siblings = [...el.value.querySelectorAll(':scope > :not(.hover-card-body)')];
   for (const sibling of siblings) sibling.style.display = 'none';
   el.value.style.width = 'auto';
@@ -106,10 +84,9 @@ $border-radius: 12px;
 .hover-card { width: 290px; }
 
 .hover-card-heading {
-  // Used to align the top of the icon with the top of the text.
   $icon-margin-top: 2px;
 
-  background-color: #666;
+  background-color: #374151;
   border-inline: $border;
   border-top: $border;
   border-top-left-radius: $border-radius;
@@ -126,7 +103,6 @@ $border-radius: 12px;
     margin-top: $icon-margin-top;
   }
 
-  // Needed for .hover-card-title to truncate.
   > div { overflow: hidden; }
 }
 
@@ -158,7 +134,7 @@ $border-radius: 12px;
 }
 
 .hover-card-footer {
-  background-color: #ddd;
+  background-color: #e5e7eb;
   border-inline: $border;
 
   &:empty { display: none; }

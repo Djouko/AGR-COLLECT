@@ -23,7 +23,10 @@ create.audit.withResult = true;
 const _get = extender(FieldKey, Actor, Frame.define('token', readable))(Actor.alias('created_by', 'createdBy'), Frame.define('lastUsed', readable))((fields, extend, options) => sql`
 select ${fields} from field_keys
   join actors on field_keys."actorId"=actors.id
-  left outer join sessions on field_keys."actorId"=sessions."actorId"
+  left outer join (
+    select distinct on ("actorId") "actorId", token from sessions 
+    where "expiresAt" > now() order by "actorId", "createdAt" desc
+  ) as active_session on field_keys."actorId"=active_session."actorId"
   ${extend|| sql`join actors as created_by on field_keys."createdBy"=created_by.id`}
   ${extend|| sql`left outer join
     (select "actorId", max("loggedAt") as "lastUsed" from audits
@@ -31,7 +34,7 @@ select ${fields} from field_keys
       group by "actorId") as last_usage
     on last_usage."actorId"=actors.id`}
   where ${sqlEquals(options.condition)} and actors."deletedAt" is null
-  order by (sessions.token is not null) desc, actors."createdAt" desc`);
+  order by (active_session.token is not null) desc, actors."createdAt" desc`);
 
 const getAllForProject = (project, options = QueryOptions.none) => ({ all }) =>
   _get(all, options.withCondition({ projectId: project.id }));

@@ -1,14 +1,3 @@
-<!--
-Copyright 2022 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <linkable tag="div" :to="to" class="home-summary-item">
     <div class="heading">
@@ -46,17 +35,32 @@ export default {
 @import '../../../assets/scss/mixins';
 
 .home-summary-item {
-  padding: 16px;
-  background-color: white;
-  border-radius: 12px;
-  border: 1px solid #E3E4E4;
+  padding: 22px;
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid $color-action-background;
   flex: 1 1 0px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  cursor: default;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(46, 125, 50, 0.1);
+    border-left-color: #1b5e20;
+  }
+
+  &[href] {
+    cursor: pointer;
+    text-decoration: none;
+  }
 
   .heading {
     align-items: center;
     display: flex;
     gap: 16px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
 
     > [class^="icon-"] {
       @include icon-box;
@@ -65,16 +69,27 @@ export default {
   }
 
   .header {
-    font-size: 16px;
-    margin-bottom: 0;
+    font-size: 22px;
+    margin-bottom: 2px;
     line-height: 1;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.02em;
+  }
+
+  .subheader {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
     font-weight: 600;
   }
 
   .body {
-    font-size: 12px;
-    line-height: 16px;
+    font-size: 13px;
+    line-height: 19px;
     margin-bottom: 0;
+    color: #9ca3af;
   }
 }
 </style>

@@ -1,15 +1,3 @@
-<!--
-Copyright 2025 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
-
 <template>
   <iframe v-if="enketoSrc" id="enketo-iframe" title="Enketo" :src="enketoSrc"></iframe>
 </template>
@@ -78,7 +66,6 @@ const single = computed(() => {
 
 const setEnketoSrc = () => {
   let basePath = '/enketo-passthrough';
-  // this is to avoid 404 warning
   if (buildMode === 'test') {
     basePath = `/#${basePath}`;
   }
@@ -87,9 +74,6 @@ const setEnketoSrc = () => {
 
   query.parentWindowOrigin = location.origin;
 
-  // We need to use encodeURIComponent here instead of URLSearchParams because enketo expects space
-  // to pass as either ' ' (literal space character) or '%20'. Whereas URLSearchParams converts
-  // space into '+' sign.
   const qs = `?${Object.entries(query)
     .filter(([, value]) => typeof value === 'string')
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
@@ -98,15 +82,12 @@ const setEnketoSrc = () => {
   if (props.actionType === 'offline') {
     return; // we don't render offline Enketo through central-frontend
   }
-  // for actionType 'new', we add '/single' only if 'single' query parameter is true
-  // for actionType 'public-link', we add '/single' only if 'single' query parameter is not false
   if (single.value) {
     prefix += '/single';
   } else if (props.actionType === 'preview') {
     prefix += `/${props.actionType}`;
   }
 
-  // we no longer render Enketo for Edit Submission from central-frontend.
 
   if (props.enketoId === form.enketoOnceId) {
     lastSubmitted(props.enketoId)
@@ -129,8 +110,6 @@ setEnketoSrc();
 const handleIframeMessage = (event) => {
   if (event.origin === location.origin) {
     const { parentWindowOrigin } = route.query;
-    // For the cases where this page is embedded in external iframe, pass the event data to the
-    // parent.
     if (location !== window.parent.location &&
         parentWindowOrigin &&
         typeof parentWindowOrigin === 'string') {
@@ -142,8 +121,6 @@ const handleIframeMessage = (event) => {
 
     if (eventData?.enketoEvent === 'submissionsuccess') {
       if (redirectUrl.value && single.value) {
-        // for public link, we read return value from query parameter. The value could be 3rd party
-        // site as well, typically a thank you page
         try {
           const normalizedUrl = new URL(redirectUrl.value);
           if (['http:', 'https:'].includes(normalizedUrl.protocol)) {

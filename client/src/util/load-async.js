@@ -1,16 +1,4 @@
 /*
-Copyright 2020 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
-*/
-
-/*
 Most dynamic imports are housed in this file. Using a dynamic import with
 loadAsync() has a couple of benefits:
 
@@ -212,6 +200,33 @@ const loaders = new Map()
   .set('UserList', loader(() => import(
     /* webpackChunkName: "component-user-list" */
     '../components/user/list.vue'
+  )))
+  // Reports Page (BF4.1)
+  .set('ReportsIndex', loader(() => import(
+    /* webpackChunkName: "component-reports-index" */
+    '../components/reports/index.vue'
+  )))
+  // Sites Management Page (BF3.2, BF4.2)
+  .set('SitesIndex', loader(() => import(
+    /* webpackChunkName: "component-sites-index" */
+    '../components/sites/index.vue'
+  )))
+  // Legal/Institutional Pages
+  .set('LegalTerms', loader(() => import(
+    /* webpackChunkName: "component-legal-terms" */
+    '../components/legal/terms.vue'
+  )))
+  .set('LegalPrivacy', loader(() => import(
+    /* webpackChunkName: "component-legal-privacy" */
+    '../components/legal/privacy.vue'
+  )))
+  .set('LegalGuide', loader(() => import(
+    /* webpackChunkName: "component-legal-guide" */
+    '../components/legal/guide.vue'
+  )))
+  .set('LegalContacts', loader(() => import(
+    /* webpackChunkName: "component-legal-contacts" */
+    '../components/legal/contacts.vue'
   )));
 
 export const loadAsync = (name) => loaders.get(name).load;

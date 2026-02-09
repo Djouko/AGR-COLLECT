@@ -1,14 +1,3 @@
-<!--
-Copyright 2025 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <a class="submission-attachment-link" :href="href" target="_blank"
     :aria-disabled="deleted" :aria-label="label" v-tooltip.aria-label>
@@ -74,8 +63,8 @@ const label = computed(() => (props.deleted
   }
 
   .icon-download {
-    border-left: 1px dotted #ccc;
-    color: #bbb;
+    border-left: 1px dotted #d1d5db;
+    color: #d1d5db;
     padding-left: 5px;
   }
   &:hover .icon-download { color: $color-action-foreground; }

@@ -1,15 +1,3 @@
-<!--
-Copyright 2017 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
-
 <!-- This component should not use v-bind:class on the .modal element. Bootstrap
 may add the `in` class to the element, and the checkScroll() method may add the
 `has-scroll` class. -->
@@ -74,10 +62,7 @@ defineOptions({
 });
 const props = defineProps({
   state: Boolean,
-  // Indicates whether the user is able to hide the modal by clicking ×,
-  // pressing escape, or clicking outside the modal.
   hideable: Boolean,
-  // 'normal', 'large', or 'full'
   size: {
     type: String,
     default: 'normal'
@@ -91,16 +76,12 @@ const { toast, redAlert, openModal } = inject('container');
 const el = ref(null);
 const body = ref(null);
 
-// The modal() method of the Boostrap plugin
 let bs;
 onMounted(() => {
   if (el.value.closest('body') != null) {
     const wrapper = $(el.value);
     bs = wrapper.modal.bind(wrapper);
   } else {
-    // We do not call modal() if the component is not attached to the document,
-    // because modal() can have side effects on the document. Most tests do not
-    // attach the component to the document.
     bs = noop;
   }
 });
@@ -132,9 +113,6 @@ watch(() => props.state, (state) => {
   if (state) toast.hide();
 });
 
-// checkScroll() checks whether the modal vertically overflows the viewport,
-// causing it to scroll. The function toggles the has-scroll class based on
-// whether the modal overflows.
 const checkScroll = () => {
   /* Before checking whether the modal overflows the viewport, we add the
   has-scroll class. The default assumption is that the modal may overflow. It's
@@ -151,8 +129,6 @@ const checkScroll = () => {
 
 let bodyHeight = 0;
 const handleHeightChange = () => {
-  // Call checkScroll() before measuring the height, as the has-scroll class can
-  // affect the height.
   checkScroll();
   const newHeight = body.value.getBoundingClientRect().height;
   if (newHeight !== bodyHeight) {
@@ -162,8 +138,6 @@ const handleHeightChange = () => {
   }
 };
 const handleWindowResize = () => {
-  // Most of the time, a window resize won't affect the height of the modal.
-  // However, if props.size === 'full', it could.
   if (props.state && props.size === 'full') handleHeightChange();
 };
 
@@ -173,13 +147,7 @@ const observer = new MutationObserver(() => {
   handleHeightChange();
   if (!ignoreMutation) {
     emit('mutate');
-    // Ignore mutations for a tick, effectively ignoring any mutations that the
-    // `mutate` event handler just made. This helps prevent a loop such that a
-    // mutation causes a `mutate` event, which causes the `mutate` handler to
-    // make a mutation, which causes a `mutate` event, and so on.
     ignoreMutation = true;
-    // The MutationObserver callback seems to be called in a microtask, so I
-    // think nextTick() is the right choice and not setTimeout().
     nextTick(() => { ignoreMutation = false; });
   }
 });
@@ -217,8 +185,6 @@ const hide = () => {
 };
 watch(() => props.state, (state) => {
   if (state)
-    // The DOM hasn't updated yet, but it should be OK to show the modal now: I
-    // think it will all happen in the same event loop.
     show();
   else
     hide();
@@ -245,8 +211,6 @@ const modalClick = (event) => {
   if (mousedownOutsideDialog && mouseupOutsideDialog) hideIfCan();
 };
 
-// Refocuses the modal if it has lost focus. This is needed so that the escape
-// key still hides the modal.
 const refocus = () => {
   /* As the user moves from one element in the modal to another, there may be
   the briefest moment when neither element is focused. We should not refocus the
@@ -255,11 +219,7 @@ const refocus = () => {
   give the second element time to receive focus. (Using nextTick() instead of
   setTimeout() didn't work.) */
   setTimeout(() => {
-    // Do not focus the modal if it has lost focus after being hidden or
-    // unmounted.
     if (!props.state || el.value == null) return;
-    // Do not focus the .modal element if it is already focused or if it
-    // contains the active element.
     if (document.activeElement != null &&
       document.activeElement.closest('.modal') === el.value)
       return;
@@ -274,13 +234,16 @@ const titleId = `modal-title${id}`;
 <style lang="scss">
 @import '../assets/scss/mixins';
 
+$modal-radius: 12px;
+
 .modal-dialog {
-  margin-top: 20vh;
-  border-radius: 6px;
+  margin: 10vh auto;
 
   .modal-content {
     border: none;
-    box-shadow: $box-shadow-panel-main;
+    border-radius: $modal-radius;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
 
     .modal-top-actions {
 
@@ -290,15 +253,14 @@ const titleId = `modal-title${id}`;
         padding: 0px;
         margin: 0px;
 
-        // Force child of banner (e.g. image) to have rounded corners
         &>* {
-          border-top-left-radius: $border-radius-modal;
-          border-top-right-radius: $border-radius-modal;
+          border-top-left-radius: $modal-radius;
+          border-top-right-radius: $modal-radius;
         }
 
         img {
           width: 100%;
-          border-bottom: 1px solid #e3e4e4;
+          border-bottom: 1px solid #e5e7eb;
         }
       }
 
@@ -307,14 +269,15 @@ const titleId = `modal-title${id}`;
 
     .modal-header {
       border-bottom: 0px;
-      color: $color-text;
+      color: #111827;
       padding: $padding-modal-header;
       padding-bottom: $padding-modal-content-spacing;
 
       h4 {
         @include text-overflow-ellipsis;
-        font-size: 18px;
-        font-weight: bold;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
       }
     }
 
@@ -322,8 +285,6 @@ const titleId = `modal-title${id}`;
       padding: $padding-modal-body;
       padding-block: 0px;
 
-      // Only add padding below modal-introduction if not right
-      // above modal-action buttons
       .modal-introduction:not(:has(+ .modal-actions)) {
         margin-bottom: $padding-modal-content-spacing;
       }
@@ -331,40 +292,34 @@ const titleId = `modal-title${id}`;
       p {
         max-width: 100%;
         margin: 0 0 $padding-modal-content-spacing;
+        color: #6b7280;
+        line-height: 1.6;
 
-        // If p is the last element or right before modal-actions, remove bottom spacing
         &:last-child,
         &:has(+ .modal-actions) {
           margin-bottom: 0;
         }
       }
 
-      // When form-group (e.g. text input) is last thing in modal
-      // before buttons, remove extra spacing on bottom.
-      // (It will keep a bit of padding.)
       .form-group {
         &:has(+ .modal-actions) {
         margin-bottom: 0px;
         }
       }
 
-      // Modal-actions are nested within the modal-body because they are
-      // defined by the specific modal in the body slot.
       .modal-actions {
-        // Undo padding from body because modal-actions
-        // are nested within modal-body
         margin-left: -$padding-modal-body;
         margin-right: -$padding-modal-body;
 
-        background: white;
-        border-bottom-left-radius: 6px;
-        border-bottom-right-radius: 6px;
+        background: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+        border-bottom-left-radius: $modal-radius;
+        border-bottom-right-radius: $modal-radius;
         padding: $padding-modal-actions;
         text-align: right;
       }
     }
 
-    // WebFormRenderer has few modals without actions
     .modal-body:not(:has(.modal-actions)) {
       padding-block-end: calc($padding-modal-body / 2);
     }
@@ -374,21 +329,12 @@ const titleId = `modal-title${id}`;
 
 
 .modal-full {
-  // This is the space around the margin and the edge of the browser window
   $margin: 40px;
-  // Because we set margin-left and width, we don't need to set margin-right.
   margin: $margin 0 $margin $margin;
-  // Subtract 10px so that there is space between the modal and the scrollbar.
   width: calc(100vw - #{2 * $margin + 10px});
 
-  // 100px is the approximate height of .modal-header.
   .modal-body { min-height: calc(100vh - #{2 * $margin + 100px}); }
 
-  // If .modal-body has so much content that it causes the modal to scroll, then
-  // .modal-actions will naturally appear at the bottom of the modal as it
-  // usually does. However, if the min height of the .modal-body is greater than
-  // the height of its content, such that the modal doesn't scroll, then we need
-  // to position .modal-actions at the bottom of the modal ourselves.
   .modal:not(.has-scroll) & .modal-actions {
     bottom: 0;
     left: 0;
@@ -407,7 +353,8 @@ const titleId = `modal-title${id}`;
 }
 
 .modal-warnings {
-  background-color: $color-warning-light;
+  background-color: #fff8e1;
+  border-radius: 8px;
   margin-bottom: 15px;
   padding: 15px;
 

@@ -1,15 +1,3 @@
-<!--
-Copyright 2024 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
-
 <!-- The DlData component renders a <dt> and <dd> for arbitrary key/value data
 from the user, e.g., entity data. The key and value will be truncated if they
 are too long. -->
@@ -42,7 +30,6 @@ defineProps({
   `name` can be passed in as a prop or as a slot.
   */
   name: String,
-  // `value` can be passed in as a prop or as a slot.
   value: String
 });
 </script>
@@ -53,8 +40,6 @@ defineProps({
 .dl-data-dt { @include text-overflow-ellipsis; }
 
 .dl-data-dd {
-  // This is needed for the line-clamp mixin to work if the component is used in
-  // .dl-horizontal. See: https://github.com/getodk/central/issues/854
   overflow: hidden;
 
   .expandable-text {
@@ -65,6 +50,6 @@ defineProps({
 
 .dl-data-empty {
   @include italic;
-  color: #888;
+  color: #9ca3af;
 }
 </style>

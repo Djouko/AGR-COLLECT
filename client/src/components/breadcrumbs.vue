@@ -1,14 +1,3 @@
-<!--
-Copyright 2024 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div class="breadcrumbs">
     <template v-for="(link, index) in links" :key="index">
@@ -41,29 +30,38 @@ defineProps({
 @import '../assets/scss/mixins';
 .breadcrumbs {
   display: flex;
-  background-color: $color-subpanel-background;
-  padding-top: 20px;
-  padding-left: 15px;
+  align-items: center;
+  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+  padding: 12px 15px 0;
   margin-inline: -15px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .breadcrumb-item {
-  @include text-overflow-ellipsis;
-  font-size: 14px;
-  max-width: 275px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
 
-  a [class^="icon-"] {
-    margin-left: 0;
-    margin-right: 3px;
+  a {
+    color: $color-accent-primary;
+    text-decoration: none;
+    transition: color 0.15s;
+
+    &:hover {
+      color: darken($color-accent-primary, 15%);
+    }
+
+    [class^="icon-"] {
+      margin-left: 0;
+      margin-right: 4px;
+      font-size: 12px;
+    }
   }
 }
 
-.breadcrumb-item a{
-  color: $color-accent-primary;
-}
-
 .separator {
-  padding: 0px 10px;
-  color: #bbb;
+  padding: 0px 8px;
+  color: #d1d5db;
+  font-size: 11px;
 }
 </style>

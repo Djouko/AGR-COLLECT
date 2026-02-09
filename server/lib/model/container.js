@@ -113,6 +113,7 @@ const withDefaults = (base, queries) => {
     Entities: require('./query/entities'),
     UserPreferences: require('./query/user-preferences'),
     GeoExtracts: require('./query/geo-extracts'),
+    Sites: require('./query/sites'),
   };
 
   return injector(base, mergeRight(defaultQueries, queries));

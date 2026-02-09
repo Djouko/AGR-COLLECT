@@ -73,11 +73,14 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
       .then((project) => Forms.getByProjectId(auth, project.id, Form.AnyVersion, Form.WithoutXml, queryOptions, isTrue(query.deleted)))));
 
   // non-REST openrosa endpoint for project-specialized formlist.
-  service.get('/projects/:projectId/formList', endpoint.openRosa(({ Forms, Projects, env }, { auth, params, originalUrl, queryOptions }) =>
+  service.get('/projects/:projectId/formList', endpoint.openRosa(({ Forms, Projects, env }, { auth, params, originalUrl, queryOptions, headers }) =>
     Projects.getById(params.projectId)
       .then(getOrNotFound)
       .then((project) => Forms.getByAuthForOpenRosa(project.id, auth, queryOptions.allowArgs('formID')))
-      .then((forms) => formList({ forms, basePath: path.resolve(originalUrl, '..'), domain: env.domain }))));
+      .then((forms) => {
+        const domain = (headers.host === 'nginx' && env.internalDomain) ? env.internalDomain : env.domain;
+        return formList({ forms, basePath: path.resolve(originalUrl, '..'), domain });
+      })));
 
   ////////////////////////////////////////////////////////////////////////////////
   // FORM CREATION, DRAFT CREATION / PUBLISH / DELETE
@@ -288,16 +291,17 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
           .then(isTrue(query.odata) ? sanitizeFieldsForOdata : identity))));
 
     // non-REST openrosa endpoint for formlist manifest document.
-    service.get(`${base}/manifest`, endpoint.openRosa(async ({ Projects, FormAttachments, Forms, env }, { auth, params, originalUrl }) => {
+    service.get(`${base}/manifest`, endpoint.openRosa(async ({ Projects, FormAttachments, Forms, env }, { auth, params, originalUrl, headers }) => {
       const form = await getInstance(Forms, params);
       await canReadForm(auth, form);
       const project = await Projects.getById(form.projectId).then(getOrNotFound);
       const options = await getOwnerOnlyOptions(auth, project);
       const attachments = await FormAttachments.getAllByFormDefIdForOpenRosa(form.def.id, options);
+      const domain = (headers.host === 'nginx' && env.internalDomain) ? env.internalDomain : env.domain;
       return formManifest({
         attachments,
         basePath: path.resolve(originalUrl, '..'),
-        domain: env.domain,
+        domain,
         projectPath: originalUrl.match(/^\/v1\/(.*\/)?projects\/\d+/)[0]
       });
     }));
@@ -438,7 +442,7 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
         .then((hasAttachments) =>
           // TODO: trying to use the existing template generator here is really awkward.
           formList({
-            draft: true, forms: [ form.withAux('openRosa', { hasAttachments }) ], basePath: path.resolve(originalUrl, '../../../..'), domain: env.domain
+            draft: true, forms: [ form.withAux('openRosa', { hasAttachments }) ], basePath: path.resolve(originalUrl, '../../../..'), domain: env.internalDomain || env.domain
           })))));
 
   service.get('/test/:key/projects/:projectId/forms/:xmlFormId/draft/manifest', anonymousEndpoint.openRosa(({ FormAttachments, Forms, env }, { params, originalUrl }) =>
@@ -448,7 +452,7 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
       .then(checkFormToken(params.key))
       .then((form) => FormAttachments.getAllByFormDefIdForOpenRosa(form.def.id)
         .then((attachments) =>
-          formManifest({ attachments, basePath: path.resolve(originalUrl, '..'), domain: env.domain })))));
+          formManifest({ attachments, basePath: path.resolve(originalUrl, '..'), domain: env.internalDomain || env.domain })))));
 
   service.get('/test/:key/projects/:projectId/forms/:xmlFormId/draft.xml', anonymousEndpoint(({ Forms }, { params }) =>
     Forms.getByProjectAndXmlFormId(params.projectId, params.xmlFormId, Form.DraftVersion, Form.IncludeXml)

@@ -1,15 +1,3 @@
-<!--
-Copyright 2020 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
-
 <template>
   <div v-if="target != null" class="popover">
     <div class="popover-content">
@@ -25,7 +13,6 @@ import { arrow, computePosition, flip, inline, offset, shift } from '@floating-u
 export default {
   name: 'Popover',
   props: {
-    // The element that triggered the popover. If `null`, the popover is hidden.
     target: HTMLElement, // eslint-disable-line vue/require-default-prop
     placement: {
       type: String,
@@ -41,9 +28,6 @@ export default {
   mounted() {
     if (this.target != null) this.$nextTick(this.show);
 
-    // A click may hide the current popover. It may also show a new popover. In
-    // order to have the correct order of actions in that case (hide, then show,
-    // not show, then hide), we use event capturing here.
     document.addEventListener('click', this.hideAfterClick, true);
     window.addEventListener('resize', this.hideAfterResize);
     document.addEventListener('keydown', this.hideAfterEsc);
@@ -86,7 +70,6 @@ export default {
           if (middlewareData.arrow) {
             // eslint-disable-next-line no-shadow
             const { x, y } = middlewareData.arrow;
-            // 10px represents the width of the popover arrow from Bootstrap CSS.
             Object.assign(arrowEl.style, {
               left: x != null ? `${x + 10}px` : '',
               top: y != null ? `${y + 10}px` : '',

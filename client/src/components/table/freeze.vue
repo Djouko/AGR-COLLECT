@@ -1,14 +1,3 @@
-<!--
-Copyright 2023 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div class="table-freeze">
     <table class="table table-freeze-frozen" :class="{ divider }">
@@ -17,7 +6,6 @@ except according to the terms contained in the LICENSE file.
           <slot name="head-frozen"></slot>
         </tr>
       </thead>
-      <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events -->
       <tbody v-if="data != null" ref="frozenBody"
         :class="`actions-trigger-${actionsTrigger}`"
         @mousemove="setActionsTrigger('hover')"
@@ -36,7 +24,6 @@ except according to the terms contained in the LICENSE file.
             <slot name="head-scrolling"></slot>
           </tr>
         </thead>
-        <!-- eslint-disable-next-line vuejs-accessibility/mouse-events-have-key-events -->
         <tbody v-if="data != null" ref="scrollingBody"
           @mousemove="setActionsTrigger('hover')" @mouseover="toggleHoverClass"
           @mouseleave="removeHoverClass">
@@ -54,8 +41,6 @@ except according to the terms contained in the LICENSE file.
 <script setup>
 import { ref, shallowRef, watch } from 'vue';
 
-// We may render many rows, so this component makes use of event delegation and
-// other optimizations.
 
 const props = defineProps({
   data: Array,
@@ -86,9 +71,6 @@ events were a challenge. For example, in SubmissionTable:
 const actionsTrigger = ref('hover');
 const setActionsTrigger = (trigger) => { actionsTrigger.value = trigger; };
 
-// When hovering over a row of the scrolling table, add a class to the
-// corresponding row of the frozen table. Note that the class may be overwritten
-// if the <tr> element in the data-frozen slot uses v-bind:class.
 const correspondingRow = shallowRef(null);
 const frozenBody = ref(null);
 const toggleHoverClass = (event) => {
@@ -141,8 +123,6 @@ defineExpose({ getRowPair });
 }
 
 .table-freeze-scrolling-container {
-  // Placing the margin here rather than on the table so that the horizontal
-  // scrollbar appears immediately below the table, above the margin.
   margin-bottom: $margin-bottom-table;
   overflow-x: auto;
 
@@ -155,22 +135,16 @@ defineExpose({ getRowPair });
 .table-freeze-frozen.divider {
   box-shadow: 3px 0 0 rgba(0, 0, 0, 0.04);
   position: relative;
-  // Adding z-index so that the background color of the other table's thead does
-  // not overlay the box shadow.
   z-index: 1;
 
   th:last-child { border-right: $border-bottom-table-heading; }
   td:last-child { border-right: $border-top-table-data; }
 }
 
-// Styles related to actions (buttons and links). If there are actions, they
-// should be in a .btn-group.
 .table-freeze-frozen {
-  // If the table has a .btn-group, it will probably be in the last column.
   td:last-child { position: relative; }
 
   .btn-group {
-    // Setting the background color in case an action is transparent.
     background-color: $color-page-background;
     left: -1000px;
     position: absolute;

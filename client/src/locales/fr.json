@@ -5,7 +5,15 @@
     "editProfile": "Éditer le profil",
     "download": "Télécharger",
     "pageNotFound": "Page non trouvée",
-    "details": "Détails"
+    "details": "Détails",
+    "reports": "Rapports & Statistiques",
+    "sites": "Gestion des Sites",
+    "legal": {
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "guide": "AGR-Guide",
+      "contacts": "Nous contacter"
+    }
   },
   "projectShow": {
     "tab": {
@@ -30,8 +38,8 @@
     "none": "Aucun",
     "admin": "Administrateur",
     "manager": "Gestionnaire de projet",
-    "viewer": "Lecteur de projet",
-    "formfill": "Collecteur de données"
+    "viewer": "Sponsor",
+    "formfill": "Agent de terrain"
   },
   "formState": {
     "open": "Ouvert",

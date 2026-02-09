@@ -92,6 +92,8 @@ const { Dataset } = require('./frames/dataset');
 
 const { Entity } = require('./frames/entity');
 
+const { Site } = require('./frames/site');
+
 class FieldKey extends Frame.define(
   table('field_keys'), aux(Actor),
   'actorId',                            'createdBy',
@@ -227,6 +229,7 @@ module.exports = {
   PublicLink,
   Role,
   Session,
+  Site,
   Submission,
   User
 };

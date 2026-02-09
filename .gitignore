@@ -1,17 +1,81 @@
+# ================================================
+# AGR-Collect Central - .gitignore
+# ================================================
+
+# OS
 .DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Editor
 *.swp
 *.swo
+*.sublime-*
+.idea/
+.vscode/
+
+# Environment (contient des secrets)
 /.env
+/.env.local
+/.env.*.local
 /docker-compose.override.yml
 /version.txt
 
+# Node.js dependencies
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+client/dist/
+**/.cache/
+**/tmp/
+*.log
+
+# Docker postgres upgrade
 /files/allow-postgres14-upgrade
 /files/postgres14/upgrade/*
 !/files/postgres14/upgrade/check-available-space
 
+# SSL certificates
 /files/local/customssl/*.pem
 
+# Mail keys
 /files/mail/rsa.private
 /files/mail/rsa.public
 
+# DKIM
 /files/dkim/*
+
+# Development/debug scripts (not part of core codebase)
+check-*.sql
+test-*.js
+test-*.sql
+fix-*.js
+fix-*.sql
+force-*.js
+compare-*.js
+create-test-*.js
+diagnose-*.js
+investigate-*.js
+recreate-*.js
+register-*.js
+republish-*.js
+reregister-*.js
+reset-*.sql
+update-*.sql
+setup-roles.js
+*.xml
+!client/**/*.xml
+!server/**/*.xml
+!files/**/*.xml
+
+# Temporary documentation (keep README.md and LICENSE.md)
+ANALYSE-*.md
+ETAT-*.md
+
+# Test coverage
+**/coverage/
+**/.nyc_output/

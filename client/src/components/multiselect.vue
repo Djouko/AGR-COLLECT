@@ -1,14 +1,3 @@
-<!--
-Copyright 2022 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div ref="dropdown" class="multiselect form-group">
     <!-- Specifying @mousedown.prevent so that clicking the select element does
@@ -57,7 +46,6 @@ except according to the terms contained in the LICENSE file.
         <ul ref="optionList" class="option-list"
           :class="{ 'shows-all': searchValue === '' }" @change="changeCheckbox">
           <template v-if="options != null">
-            <!-- eslint-disable-next-line vue/object-curly-newline -->
             <li v-for="({ value, key = value, text = value, description }, i) in options"
               :key="key" :class="{ 'search-match': searchMatches.has(value) }">
               <div class="checkbox">
@@ -122,25 +110,14 @@ const props = defineProps({
     type: Array,
     required: false
   },
-  // props.modelValue is an array of the values of the options that have been
-  // selected. Every value in modelValue should also be in props.options, unless
-  // props.options is `null`. The relative order of the values in modelValue may
-  // differ from their relative order in props.options. The component assumes
-  // that modelValue will not change while the dropdown is shown.
   modelValue: {
     type: Array,
     required: true
   },
-  // By default, the user can uncheck all options. However, if defaultToAll is
-  // `true`, then at least one option must be selected. If all options are
-  // unchecked, then the selection falls back to all options. That can be useful
-  // in cases where selecting none is guaranteed to lead to an empty result.
   defaultToAll: Boolean,
 
-  // `true` if the options are loading and `false` if not.
   loading: Boolean,
 
-  // Text, including for form controls and actions
   label: {
     type: String,
     required: true
@@ -166,7 +143,6 @@ const props = defineProps({
     required: false
   },
 
-  // disabled the control
   disabled: {
     type: Boolean,
     default: false
@@ -190,7 +166,6 @@ const optionList = ref(null);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// SYNC props.modelValue AND CHECKBOXES
 
 /*
 We try to keep props.modelValue and the checkboxes in sync. Either one can
@@ -213,7 +188,6 @@ same as the difference between props.modelValue and the checkboxes, but it might
 not be (if an update:modelValue event was ignored).
 */
 
-// `selected` needs to be reactive for the after-list slot.
 const selected = shallowReactive(new Set());
 const changes = shallowReactive(new Set());
 const change = (value) => {
@@ -229,7 +203,6 @@ const change = (value) => {
 };
 
 let needsSync = true;
-// Syncs the checkboxes and `selected` with props.modelValue.
 const syncWithModelValue = () => {
   if (!needsSync) return;
 
@@ -247,10 +220,6 @@ const changeCheckbox = ({ target }) => {
   change(props.options[target.dataset.index].value);
 };
 
-// emittedValue is used for an optimization, to avoid an unnecessary sync.
-// Unless it is `null`, it holds the last value emitted since props.modelValue
-// was last set. It equals `null` if no value has been emitted since then (or if
-// no value has ever been emitted).
 let emittedValue = null;
 const emitIfChanged = () => {
   if (changes.size === 0) return;
@@ -258,12 +227,8 @@ const emitIfChanged = () => {
 
   if (props.defaultToAll && selected.size === 0) {
     if (props.modelValue.length === props.options.length) {
-      // If props.modelValue is already all options, then there hasn't been a
-      // change. We don't need to emit a new value, but we do need to sync the
-      // checkboxes.
       needsSync = true;
     } else {
-      // Setting emittedValue to `null` so that checkboxes are synced.
       emittedValue = null;
       emit('update:modelValue', props.options.map(({ value }) => value));
     }
@@ -276,7 +241,6 @@ const emitIfChanged = () => {
 watch(
   () => props.modelValue,
   (modelValue) => {
-    // If modelValue === emittedValue, then we don't need to sync anything.
     if (modelValue !== emittedValue) {
       /* We set needsSync rather than immediately calling syncWithModelValue().
       We do that for two reasons. First, and most importantly, if
@@ -285,8 +249,6 @@ watch(
       props.modelValue will change multiple times while the dropdown is hidden,
       syncing multiple times is unnecessary. */
       needsSync = true;
-      // syncWithModelValue() will also clear `selected`, but we might as well
-      // free up the memory now.
       selected.clear();
     }
 
@@ -315,7 +277,6 @@ if (buildMode === 'development') {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// SEARCH
 
 const searchValue = ref('');
 const searchMatches = shallowReactive(new Set());
@@ -327,7 +288,6 @@ const textToSearch = computed(() => props.options.map(option => {
     result.push(description.toLocaleLowerCase(i18n.locale));
   return result;
 }));
-// We may need to add debouncing here at some point.
 watch(searchValue, (value) => {
   searchMatches.clear();
   if (value === '') return;
@@ -344,9 +304,6 @@ const clearSearch = () => {
   searchInput.value.focus();
 };
 
-// Fix the width of .option-list during search so that it doesn't change based
-// on the search results. The width won't change even if the scrollbar
-// disappears or reappears during the search.
 watch(searchValue, (value) => {
   const { style } = optionList.value;
   if (value === '') {
@@ -360,7 +317,6 @@ watch(searchValue, (value) => {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// BOOTSTRAP DROPDOWN
 
 const dropdown = ref(null);
 const $dropdown = computed(() => $(dropdown.value));
@@ -374,11 +330,9 @@ onMounted(() => {
 });
 onUnmounted(() => { $dropdown.value.off('.bs.dropdown'); });
 
-//  this should be changed i think
 const toggle = ref(null);
 const $toggle = computed(() => $(toggle.value));
 const toggleAfterEnter = ({ key }) => {
-  // console.log('toggleAfterEnter');
   if (key === 'Enter') $toggle.value.dropdown('toggle');
 };
 
@@ -399,9 +353,7 @@ const verifyAttached = buildMode === 'test'
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// SELECT ALL / NONE
 
-// `true` for select all, `false` for select none.
 const changeAll = (selectAll) => {
   if (selected.size === (selectAll ? props.options.length : 0)) return;
   const selector = [selectAll ? 'input:not(:checked)' : 'input:checked'];
@@ -415,9 +367,7 @@ const changeAll = (selectAll) => {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// OTHER PROPS
 
-// Implements props.loading and props.placeholder.
 const selectOption = computed(() => {
   if (props.loading) return i18n.t('common.loading');
   if (props.options == null) return i18n.t('common.error');
@@ -428,7 +378,6 @@ const selectOption = computed(() => {
   });
 });
 
-// Implements props.empty.
 const emptyMessage = computed(() => (searchValue.value === ''
   ? (props.options != null && props.options.length === 0
     ? (props.empty != null ? props.empty : i18n.t('common.noResults'))
@@ -452,7 +401,7 @@ const emptyMessage = computed(() => (searchValue.value === ''
 
   .icon-angle-down {
     font-size: 16px;
-    color: #555555;
+    color: #6b7280;
     font-weight: bold;
     pointer-events: none;
     z-index: 1;
@@ -473,7 +422,6 @@ const emptyMessage = computed(() => (searchValue.value === ''
   .search {
     padding: $vpadding $hpadding;
 
-    // The Multiselect component may be inside a .form-inline.
     .form-group {
       @include filter-control;
       width: 100%;
@@ -485,7 +433,6 @@ const emptyMessage = computed(() => (searchValue.value === ''
       font-size: $font-size-dropdown-menu;
       height: auto;
       line-height: $line-height;
-      // padding-right for the .close button.
       padding: 0 16px 0 0;
       width: 100%;
 
@@ -547,13 +494,9 @@ const emptyMessage = computed(() => (searchValue.value === ''
 
     .empty-message {
       display: list-item;
-      // 22px is the same as the other <li> elements.
       height: 22px;
-      // Give .empty-message a larger max-width to help it not wrap.
       max-width: 375px;
       padding-top: 3px;
-      // This seems to be needed for .empty-message to use the full max-width
-      // available to it.
       width: max-content;
 
       &:empty { display: none; }
@@ -585,7 +528,6 @@ const emptyMessage = computed(() => (searchValue.value === ''
 }
 </i18n>
 
-<!-- Autogenerated by destructure.js -->
 <i18n>
 {
   "de": {

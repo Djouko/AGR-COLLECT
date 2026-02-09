@@ -1,14 +1,3 @@
-<!--
-Copyright 2024 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <popover
     :target="component != null ? hoverCard.anchor : null" placement="right"
@@ -18,9 +7,6 @@ except according to the terms contained in the LICENSE file.
 </template>
 
 <script setup>
-// This component is what reacts to changes to the hoverCard object. When
-// hoverCard.show() is called, this component will send one or more requests,
-// then render a popover.
 
 import { inject, shallowRef, watch } from 'vue';
 
@@ -95,12 +81,8 @@ const show = () => {
     });
   Promise.all(requests)
     .then(() => {
-      // This is set after all requests have succeeded and is used to
-      // determine whether the popover should be shown.
       component.value = typeConfig.component;
     })
-    // If some but not all requests succeeded, we want to avoid holding onto the
-    // resources that were successful.
     .catch(resetResources);
 };
 const hide = () => {
@@ -108,10 +90,6 @@ const hide = () => {
   component.value = null;
 };
 watch(() => hoverCard.anchor, (newAnchor, oldAnchor) => {
-  // Note the possibility that oldAnchor != null && newAnchor != null. That
-  // would be pretty unusual, but it could happen if preventHide is set to
-  // `true` in useHoverCard(). In that case, we need to hide the current hover
-  // card before we show the new one.
   if (oldAnchor != null) hide();
   if (newAnchor != null) show();
 });

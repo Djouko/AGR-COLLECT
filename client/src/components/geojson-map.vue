@@ -1,14 +1,3 @@
-<!--
-Copyright 2025 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div v-show="featureCount !== 0" ref="el" class="geojson-map">
     <div ref="mapContainer" class="map-container" :class="{ opaque: shown }" tabindex="0" :inert="!shown"></div>
@@ -17,7 +6,6 @@ except according to the terms contained in the LICENSE file.
       <div class="control-bar">
         <button v-tooltip.aria-describedby="$t('zoomToFit')" type="button"
           @click="fitViewToAllFeatures()">
-          <!-- eslint-disable-next-line vuejs-accessibility/alt-text -->
           <img class="fit-icon" :src="FitIcon">
         </button>
       </div>
@@ -32,7 +20,6 @@ except according to the terms contained in the LICENSE file.
 </template>
 
 <script setup>
-// OpenLayers
 import Cluster from 'ol/source/Cluster';
 import Feature from 'ol/Feature';
 import GeoJSON from 'ol/format/GeoJSON';
@@ -63,7 +50,6 @@ import { useI18nUtils } from '../util/i18n';
 
 const props = defineProps({
   data: Object,
-  // Function to set the height of the map
   sizer: {
     type: Function,
     default: noop
@@ -86,13 +72,7 @@ const mapContainer = useTemplateRef('mapContainer');
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// WEBGL
 
-// We use WebGL for performance reasons. WebGL isn't available in our current
-// testing setup, so in test, we fall back to a basic 2D canvas. That misses out
-// on some styling functionality, but we don't really need that in test. Outside
-// of test though, if WebGL isn't available, we show a redAlert and nothing
-// else. In that setting, styling is needed.
 
 let webGL = false;
 try {
@@ -109,8 +89,6 @@ const createWebGLLayer = (source) => (!webGL
   ? new VectorLayer({ source })
   : new WebGLVectorLayer({
     source,
-    // It's not really useful to pass these options to VectorLayer in test.
-    // VectorLayer doesn't even support `variables`.
     style,
     variables: { selectedId: '' }
   }));
@@ -118,7 +96,6 @@ const createWebGLLayer = (source) => (!webGL
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// OPENLAYERS OBJECTS
 
 const baseLayer = new TileLayer({ source: new OSM() });
 
@@ -128,9 +105,6 @@ const featureLayer = createWebGLLayer(featureSource);
 const projection = 'EPSG:3857';
 const mapInstance = new Map({
   layers: [baseLayer, featureLayer],
-  // The `extent` option is needed to prevent issues related to map cloning,
-  // which happens when panning at low zoom. See
-  // https://github.com/getodk/central-frontend/pull/1384
   view: new View({ projection, extent: getProjection(projection).getExtent() }),
   controls: [new Zoom()]
 });
@@ -138,7 +112,6 @@ const mapInstance = new Map({
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// CLUSTERING
 
 const clusterSource = new Cluster({
   source: featureSource,
@@ -176,8 +149,6 @@ watch(
 const clusterLayer = createWebGLLayer(clusterSource);
 mapInstance.addLayer(clusterLayer);
 
-// WebGLVectorLayer doesn't seem to support text styles, so cluster sizes go in
-// a separate layer.
 const clusterSizeLayer = new VectorLayer({
   source: clusterSource,
   style: getTextStyles()
@@ -185,20 +156,15 @@ const clusterSizeLayer = new VectorLayer({
 mapInstance.addLayer(clusterSizeLayer);
 
 const showsClusters = ref(true);
-// Many base layers offer tiles up to a zoom level of 18 or 19. Beyond that, the
-// tiles can get blurry.
 const maxZoom = ref(19);
 watch(
   [showsClusters, maxZoom],
   () => {
     if (showsClusters.value && maxZoom.value === '') return;
 
-    // Only show clusters when the zoom level is below maxZoom. Subtracting
-    // 0.001 because the maxZoom option here is inclusive.
     clusterLayer.setMaxZoom(showsClusters.value ? maxZoom.value - 0.001 : -1);
     clusterSizeLayer.setMaxZoom(clusterLayer.getMaxZoom());
 
-    // Only show featureLayer once clusters are no longer shown.
     featureLayer.setMinZoom(clusterLayer.getMaxZoom());
   },
   { immediate: true }
@@ -209,15 +175,11 @@ const isCluster = (feature) => feature.get('clusterSize') != null;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// ADD/REMOVE FEATURES
 
 const featureCount = ref(0);
 
 const addFeatures = () => {
   if (props.data == null) return;
-  // If canRender is `false` -- if WebGL isn't available -- then we can't render
-  // the map correctly. To prevent the map from being shown, here we don't even
-  // allow features to be added.
   if (!canRender) return;
 
   const features = new GeoJSON().readFeatures(props.data, {
@@ -225,8 +187,6 @@ const addFeatures = () => {
   });
   if (features.length === 0) return;
 
-  // Copy each feature's id into properties so that it can be accessed from
-  // OpenLayers style rules.
   for (const feature of features) feature.set('id', feature.getId());
 
   featureSource.addFeatures(features);
@@ -244,7 +204,6 @@ const removeFeatures = () => {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// RESIZE MAP
 
 const resize = () => {
   log('resizing map');
@@ -253,19 +212,12 @@ const resize = () => {
   const result = sizer();
   if (result != null) {
     log('return value from sizer prop:', result);
-    // Here, we set the element's min-height, not its full height.
-    // .map-container also has a min-height, and if that's greater than the
-    // min-height here, the element will be taller than its min-height.
     el.value.style.minHeight = typeof result === 'number'
       ? (result > 0 ? px(result) : '')
       : result;
   }
   log('min-height of .geojson-map:', el.value.style.minHeight);
 
-  // .map-container seems to need a concrete height to be set on it (e.g.,
-  // setting `height: 100%;` in CSS didn't work). Before setting it, we first
-  // unset it: we need to undo any previous resize() call before recalculating
-  // the height.
   mapContainer.value.style.height = '';
   const newHeight = px(el.value.getBoundingClientRect().height);
   mapContainer.value.style.height = newHeight;
@@ -280,23 +232,19 @@ const resize = () => {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// VIEW
 
 const viewPadding = 50;
 const animationDuration = 1000;
 
 const fitView = (extent, options = undefined) => {
   mapInstance.getView().fit(extent, {
-    // We need to provide enough space for styled features.
     padding: new Array(4).fill(viewPadding),
-    // Avoid zooming in to an extreme degree.
     maxZoom: maxZoom.value,
     ...options
   });
 };
 
 const fitViewToAllFeatures = (animate = true) => {
-  // Used by map initial view and control button to reset the view to show all features
   fitView(featureSource.getExtent(), animate ? { duration: animationDuration } : null);
 };
 
@@ -307,9 +255,6 @@ const countFeaturesInView = () => {
   const extent = mapInstance.getView().calculateExtent();
   if (clusterLayer.isVisible()) {
     clusterSource.forEachFeatureIntersectingExtent(extent, feature => {
-      // This counts the entire cluster even if not all features in the cluster
-      // are in view. While that's arguably imprecise, it's probably less
-      // confusing to users that way.
       count += isCluster(feature) ? feature.get('features').length : 1;
     });
   } else {
@@ -327,7 +272,6 @@ const zoomLevel = ref(0);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// SHOW/HIDE
 
 /*
 There are two levels of visibility at play here:
@@ -352,10 +296,6 @@ const show = async () => {
   if (shown.value) return;
   log('attempting to show map');
 
-  // show() is async, but there are also cases where it will be called multiple
-  // times in a short period of time. Because of that, show() is abortable.
-  // Here, we abort any previous attempt to show(). That's needed to avoid
-  // emitting `show` twice.
   abortShow();
 
   if (featureCount.value === 0) {
@@ -363,16 +303,11 @@ const show = async () => {
     return;
   }
 
-  // Before the view can be fit, the map first needs to be sized: otherwise, the
-  // fit would be incorrect. If the map hasn't been sized, we return immediately
-  // and try again later.
   if (mapInstance.getSize().some(length => length === 0)) {
     log('map not sized; not shown');
     return;
   }
 
-  // Give the parent component an opportunity to resize the map right before
-  // it's shown.
   resize();
   if (mapInstance.getSize().some(length => length === 0)) {
     log('map not sized; not shown');
@@ -382,7 +317,6 @@ const show = async () => {
   emit('show');
   fitViewToAllFeatures(false);
 
-  // Set abortShow.
   const abortController = new AbortController();
   abortShow = () => {
     log('aborting show');
@@ -390,13 +324,9 @@ const show = async () => {
     abortShow = noop;
   };
 
-  // Wait for the map to render fully. But if it takes too long, just proceed
-  // with showing the map.
   await Promise.race([
     new Promise(resolve => {
       mapInstance.once('rendercomplete', resolve);
-      // Nudge mapInstance to render if it's not already doing so for some
-      // reason. Otherwise, the promise may never resolve.
       mapInstance.render();
     }),
     new Promise(resolve => { setTimeout(resolve, 1500); })
@@ -423,14 +353,9 @@ const hide = () => {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// OVERLAP HINTS
 
-// getHits() below searches a radius for overlapping features. overlapRadius
-// sets that radius.
 const overlapRadius = ref(7);
 
-// If showsOverlapHints.value is `true`, then the overlap search area will be
-// shown on the map as a helpful hint.
 const showsOverlapHints = ref(false);
 const overlapHintSource = new VectorSource();
 
@@ -461,13 +386,11 @@ if (config.devTools && webGL) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// HIT DETECTION
 
 const hitDetectionOptions = {
   layerFilter: (layer) => layer === featureLayer || layer === clusterLayer
 };
 
-// Updates the cursor based on whether the user is moving over a feature.
 const moveOverFeature = (event) => {
   if (event.dragging) return;
   const hit = mapInstance.hasFeatureAtPixel(event.pixel, hitDetectionOptions);
@@ -475,7 +398,6 @@ const moveOverFeature = (event) => {
 };
 
 const forEachFeatureNearPixel = (source, pixel, radius, callback) => {
-  // Build a small bounding box and check all features for intersection.
   const corners = [
     [pixel[0] - radius, pixel[1] - radius], // top-left
     [pixel[0] + radius, pixel[1] + radius] // bottom-right
@@ -497,10 +419,6 @@ const getHits = (pixel) => {
     if (cluster != null) return [cluster];
   }
 
-  // getFeaturesAtPixel() above usually works great, but when features overlap,
-  // it only seems to return the feature on top. Here, we try to detect
-  // additional, overlapping hits by searching for features near `pixel`. As we
-  // do so, we skip clusters and avoid duplicates.
   const source = clusterLayer.isVisible() ? clusterSource : featureSource;
   const ids = hits.reduce((set, hit) => set.add(hit.getId()), new Set());
   forEachFeatureNearPixel(source, pixel, overlapRadius.value, (feature) => {
@@ -514,24 +432,17 @@ const getHits = (pixel) => {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// SELECT FEATURE
 
 let selectedId;
 
-// Converts an OpenLayers Feature object to a simple object before emitting it.
-// That way, the parent component never has to interact with OpenLayers.
 const featureToObject = (feature) =>
   ({ id: feature.getId(), properties: feature.getProperties() });
 
-// Selects an individual feature (not a cluster) or deselects the selected
-// feature (if feature is `null`).
 const selectFeature = (feature, emitChange = true) => {
   const id = feature?.getId();
   if (id === selectedId) return;
 
   if (feature != null && feature.getGeometry().getType() === 'Point')
-    // The overlap hint is a circle just like the background of a selected
-    // point, so we hide it.
     hideOverlapHint();
 
   mapInstance.getLayers().forEach(layer => {
@@ -549,22 +460,12 @@ const selectCluster = (cluster) => {
 
   const features = cluster.get('features');
   const view = mapInstance.getView();
-  // If there aren't too many features in the cluster, calculate their boundary
-  // box and fit the view to that. If there are enough features that such a
-  // calculation might be onerous, just zoom in on the cluster.
   if (features.length <= 2000) {
     const featureExtent = createEmptyExtent();
     for (const feature of features)
       extend(featureExtent, feature.getGeometry().getExtent());
 
-    // The cluster could contain a LineString or Polygon of arbitrary size, so
-    // it's possible that featureExtent is not fully in view. In that case,
-    // fitting the view to featureExtent could cause the map to zoom out, not
-    // in. Here, we check whether fitting the view to featureExtent would cause
-    // the map to zoom in.
     const oldResolution = view.getResolution();
-    // Subtracting the padding, as padding reduces the effective size of the
-    // area in which featureExtent can be shown.
     const size = mapInstance.getSize().map(length => length - 2 * viewPadding);
     const newResolution = view.getResolutionForExtent(featureExtent, size);
     const fitWouldZoomIn = newResolution < oldResolution;
@@ -602,24 +503,15 @@ const selectFeatureAtPixel = (pixel) => {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// HOOKS - TIE EVERYTHING TOGETHER
 
-// We may have attempted to show() the map, but failed because the map hadn't
-// been sized. The main reason for that is that an ancestor element was hidden.
-// This ResizeObserver accounts for that case: once the ancestor element becomes
-// visible, this component will become visible, and the ResizeObserver will be
-// triggered.
 const resizeObserver = new ResizeObserver(show);
 
 onMounted(() => {
   mapInstance.setTarget(mapContainer.value);
   addFeatures();
-  // If el.value is already visible, resizeObserver will run the callback
-  // immediately.
   resizeObserver.observe(el.value);
 });
 
-// OpenLayers event listeners
 const olListeners = [];
 const olOn = (target, type, callback) => {
   target.on(type, callback);
@@ -627,8 +519,6 @@ const olOn = (target, type, callback) => {
 };
 
 olOn(mapInstance, 'moveend', () => {
-  // show() will trigger an initial `moveend`, so we use shown.value to ignore
-  // that.
   if (shown.value) countFeaturesInView();
 
   zoomLevel.value = mapInstance.getView().getZoom();
@@ -636,10 +526,6 @@ olOn(mapInstance, 'moveend', () => {
 });
 olOn(mapInstance, 'pointermove', moveOverFeature);
 
-// OpenLayers has a `singleclick` event, but it lags the actual click by 250
-// milliseconds in order to exclude double-clicks. Here, we listen for `click`
-// events in order to avoid the lag, then use ignoreDoubleClick() to account for
-// double-clicks.
 const ignoreDoubleClick = (callback) => {
   let previousPixel;
   let previousTime = 0;
@@ -667,15 +553,8 @@ watch(() => props.data, (newData, oldData) => {
     addFeatures();
 
     if (!shown.value)
-      // Even though shown.value is `false`, we can't rely on resizeObserver to
-      // call show(): we need to call it here as well. If props.data were
-      // changed while the map was rendering (while a previous call to show()
-      // was still in progress), the component would be visible, with its size
-      // set, even as the map remains transparent.
       show();
     else
-      // If the map isn't already shown, then show() above will set
-      // inViewCount.value.
       countFeaturesInView();
   } else {
     hide();
@@ -691,8 +570,6 @@ onBeforeUnmount(() => {
   resizeObserver.disconnect();
   mapInstance.setTarget(null);
 
-  // It's probably not necessary to manually clean up layers in this way. It's
-  // just an attempt to make sure that everything is garbage-collected.
   featureSource.clear(true);
   for (const layer of [...mapInstance.getLayers().getArray()]) {
     mapInstance.removeLayer(layer);
@@ -700,11 +577,6 @@ onBeforeUnmount(() => {
   }
 });
 
-// Here, we expose functions that allow the parent component to modify
-// individual features. To update the set of features as a whole, the parent
-// component can change props.data; the functions here are specifically oriented
-// around individual features. We also expose functions that facilitate testing
-// (e.g., getFeatures()).
 defineExpose({
   getFeatures: () => featureSource.getFeatures().map(featureToObject),
   selectFeature: (id, emitChange) => {
@@ -727,8 +599,6 @@ defineExpose({
 <style lang="scss">
 @import '../assets/scss/variables';
 
-// based on Web Forms variables
-// (zoom controls styled similarly to those in WF MapBlock.vue)
 $spacing: 10px;
 $background-color: #fff;
 $radius: 6px;
@@ -853,7 +723,6 @@ $muted-background-color: #F1F5F9;
 }
 </i18n>
 
-<!-- Autogenerated by destructure.js -->
 <i18n>
 {
   "de": {

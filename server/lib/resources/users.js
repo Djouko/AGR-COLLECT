@@ -116,7 +116,9 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
       return user;
     }
     const [ verbs, preferences ] = await Promise.all([ Auth.verbsOn(user.actorId, '*'), UserPreferences.getForUser(user.actorId) ]);
-    return Object.assign({ verbs, preferences }, user.forApi());
+    // Construire explicitement l'objet de retour avec verbs et preferences
+    const userApi = user.forApi();
+    return { ...userApi, verbs: verbs || [], preferences: preferences || {} };
   }));
 
   // Gets full details of a user by actor id.

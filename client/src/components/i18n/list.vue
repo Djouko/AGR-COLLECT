@@ -1,14 +1,3 @@
-<!--
-Copyright 2024 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <span v-if="list.length !== 0" ref="el" class="i18n-list">
     <template v-for="(element, index) in list" :key="index">
@@ -51,7 +40,6 @@ fully rendered until a tick after it is mounted. */
 const literals = shallowRef([]);
 const el = ref(null);
 const { formatListToParts } = useI18nUtils();
-// Formats the list, setting literals.value.
 const format = () => {
   literals.value = new Array(props.list.length + 1).fill('');
   if (props.list.length === 0) return;
@@ -63,10 +51,6 @@ const format = () => {
     if (part.type === 'literal') {
       literals.value[index] += part.value;
     } else {
-      // Verify basic assumptions about `parts`. If these aren't true, then the
-      // approach described above won't work. Elements should appear in the same
-      // order in `parts` as they do in `elements`. A single element should not
-      // be broken into multiple parts.
       if (index === elements.length || part.value !== elements[index])
         throw new Error('element mismatch');
       index += 1;
@@ -74,16 +58,11 @@ const format = () => {
   }
 };
 let formatted = false;
-// Calls format() after a change to props.list or i18n.locale.
 watchPostEffect(() => {
   format();
-  // Prevent onUpdated() from calling format() a second time. The onUpdated()
-  // callback seems to be called after the watch effect.
   formatted = true;
   nextTick(() => { formatted = false; });
 });
-// Calls format() after the DOM is updated, including after the content of a
-// slot changes.
 onUpdated(() => { if (!formatted) format(); });
 
 const lastLiteral = computed(() => last(literals));

@@ -1,14 +1,3 @@
-<!--
-Copyright 2021 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <tr class="submission-metadata-row">
     <td class="row-number">{{ $n(rowNumber, 'noGrouping') }}</td>
@@ -110,7 +99,6 @@ export default {
   }
 
   .state-and-actions {
-    // Ensure that the column is wide enough that the .btn-group does not wrap.
     min-width: 205px;
     &:lang(id) { min-width: 221px; }
   }
@@ -127,16 +115,15 @@ export default {
       margin-right: #{$margin-right-icon + 1px};
     }
 
-    .icon-pencil { color: #777; }
+    .icon-pencil { color: #9ca3af; }
   }
   .edits {
-    color: #777;
+    color: #9ca3af;
     margin-left: auto;
     width: 41px;
 
     .icon-pencil { margin-right: 5px; }
   }
   .col-deleted-at { color: $color-danger; }
-  // The actions themselves are styled via the icon-btn-group mixin.
 }
 </style>

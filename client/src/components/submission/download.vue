@@ -1,14 +1,3 @@
-<!--
-Copyright 2019 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <modal :state="state" hideable :size="managedKey == null ? 'normal' : 'large'"
     backdrop @hide="$emit('hide')"
@@ -71,7 +60,6 @@ except according to the terms contained in the LICENSE file.
           </template>
         </form>
         <div id="submission-download-divider"></div>
-        <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events -->
         <div id="submission-download-actions" @click="download">
           <div class="submission-download-action">
             <span class="submission-download-action-label">
@@ -115,7 +103,6 @@ except according to the terms contained in the LICENSE file.
       </div>
       <!-- We specify a Frontend page for src so that any cookies are sent when
       the iframe form is submitted. -->
-      <!-- eslint-disable-next-line vuejs-accessibility/iframe-has-title -->
       <iframe v-show="false" ref="iframe" src="/blank.html"></iframe>
     </template>
   </modal>
@@ -154,8 +141,6 @@ export default {
     };
   },
   computed: {
-    // At the moment, there can only be a single managed key at most: once
-    // encrypted, a project cannot be decrypted.
     managedKey() {
       return this.keys.dataExists ? this.keys.find(key => key.managed) : null;
     },
@@ -189,10 +174,6 @@ export default {
   watch: {
     state(state) {
       if (!state) {
-        // Reset the passphrase, but don't reset the other form fields. If the
-        // user reopens the modal, they won't want to have to re-select all the
-        // same options. Preserving the form fields is also needed for the
-        // "Try again" link to work.
         this.passphrase = '';
       }
     },
@@ -246,7 +227,6 @@ export default {
       doc.body.appendChild(form);
 
       const passphraseInput = doc.createElement('input');
-      // This might not be necessary (not sure).
       passphraseInput.setAttribute('type', 'password');
       passphraseInput.setAttribute('name', this.managedKey.id.toString());
       passphraseInput.setAttribute('autocomplete', 'off');
@@ -261,19 +241,13 @@ export default {
       passphraseInput.value = this.passphrase;
       csrf.value = getCookieValue('__csrf');
       form.submit();
-      // Ensure that the inputs' values are no longer in the DOM.
       form.reset();
     },
     checkForProblem() {
       const doc = this.$refs.iframe.contentWindow.document;
-      // If Backend returns a Problem, the iframe changes pages. However, if the
-      // form submission is successful, it seems that the iframe does not change
-      // pages, and the form remains on the page.
       if (doc.querySelector('form') != null || doc.body == null) return false;
       let problem;
       try {
-        // Note that the Problem may be wrapped in another element, for example,
-        // a <pre> element.
         problem = JSON.parse(doc.body.textContent);
       } catch (e) {
         this.logger.log(doc.body.textContent);
@@ -283,11 +257,6 @@ export default {
       return true;
     },
     decrypt(action) {
-      // Return immediately if the iframe is still loading. It would probably be
-      // better to wait for the iframe to load, then continue the process then,
-      // but there would be edge cases to consider in implementing that. (For
-      // example, what if the user submits the form, but then closes the modal
-      // before the iframe finishes loading?)
       if (this.$refs.iframe.contentWindow.document.readyState === 'loading') {
         this.redAlert.show('alert.unavailable');
         return;
@@ -300,14 +269,11 @@ export default {
         (tries < 300 ? 1000 : null));
     },
     download(event) {
-      // Return early if triggered from the "Try again" link.
       if (!this.state) return;
 
       const a = event.target.closest('a');
       if (a == null) return;
 
-      // `true` if the click will go through and the download will be attempted;
-      // `false` if the form is invalid.
       const willDownload = this.managedKey == null ||
         this.$refs.form.reportValidity();
 
@@ -357,9 +323,6 @@ $actions-padding-left: $label-icon-max-width + $margin-right-icon;
   padding-left: $actions-padding-left;
 }
 .submission-download-action-label {
-  // Instead of wrapping the element in a <div> and setting the margin on that,
-  // we set `display` to inline-block: that way, the cursor will be shown as
-  // not-allowed only over the text.
   display: inline-block;
   font-weight: bold;
   margin-bottom: 3px;
@@ -423,7 +386,6 @@ $actions-padding-left: $label-icon-max-width + $margin-right-icon;
 }
 </i18n>
 
-<!-- Autogenerated by destructure.js -->
 <i18n>
 {
   "cs": {

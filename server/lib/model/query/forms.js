@@ -56,7 +56,9 @@ const timeboundEnketo = (request, bound) =>
 // times out or results in an error, then `null` is returned.
 const pushDraftToEnketo = ({ projectId, xmlFormId, def, draftToken = def?.draftToken }, bound = undefined) => async ({ enketo, env }) => {
   const encodedFormId = encodeURIComponent(xmlFormId);
-  const path = `${env.domain}/v1/test/${draftToken}/projects/${projectId}/forms/${encodedFormId}/draft`;
+  // Use internalDomain for Docker internal communication with Enketo
+  const baseDomain = env.internalDomain || env.domain;
+  const path = `${baseDomain}/v1/test/${draftToken}/projects/${projectId}/forms/${encodedFormId}/draft`;
   const { enketoId } = await timeboundEnketo(enketo.create(path, xmlFormId), bound);
   // Return `null` if enketoId is `undefined`.
   return enketoId ?? null;
@@ -80,7 +82,9 @@ const pushFormToEnketo = ({ projectId, xmlFormId, acteeId }, bound = undefined) 
   await Assignments.grantSystem(actor, 'formview', acteeId);
   const { token } = await Sessions.create(actor, expiresAt);
 
-  const path = `${env.domain}/v1/projects/${projectId}`;
+  // Use internalDomain for Docker internal communication with Enketo
+  const baseDomain = env.internalDomain || env.domain;
+  const path = `${baseDomain}/v1/projects/${projectId}`;
   return timeboundEnketo(enketo.create(path, xmlFormId, token), bound);
 };
 

@@ -1,14 +1,3 @@
-<!--
-Copyright 2017 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div>
     <nav class="navbar navbar-default">
@@ -22,12 +11,25 @@ except according to the terms contained in the LICENSE file.
             <span class="navbar-icon-bar"></span>
             <span class="navbar-icon-bar"></span>
           </button>
-          <router-link to="/" class="navbar-brand">AGR-Collect</router-link>
+          <router-link to="/" class="navbar-brand">
+            <svg class="navbar-logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="18" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+              <circle cx="20" cy="20" r="8" fill="rgba(255,255,255,0.9)"/>
+              <circle cx="20" cy="8" r="3" fill="rgba(255,255,255,0.7)"/>
+              <circle cx="30" cy="26" r="3" fill="rgba(255,255,255,0.7)"/>
+              <circle cx="10" cy="26" r="3" fill="rgba(255,255,255,0.7)"/>
+              <line x1="20" y1="12" x2="20" y2="11" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+              <line x1="27" y1="24" x2="24" y2="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+              <line x1="13" y1="24" x2="16" y2="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+            </svg>
+            <span>AGR-Collect</span>
+          </router-link>
         </div>
         <div class="collapse navbar-collapse">
           <navbar-links v-if="visiblyLoggedIn"/>
           <div class="navbar-right">
-            <a v-show="showsAnalyticsNotice" id="navbar-analytics-notice"
+            <!-- Analytics notice hidden for AGR-Collect -->
+            <a v-if="false" id="navbar-analytics-notice"
               href="#" @click.prevent="analyticsIntroduction.show()">
               {{ $t('analyticsNotice') }}
             </a>
@@ -69,8 +71,6 @@ export default {
   },
   inject: ['config', 'visiblyLoggedIn'],
   setup() {
-    // The component does not assume that this data will exist when the
-    // component is created.
     const { currentUser, analyticsConfig } = useRequestData();
     const { canRoute } = useRoutes();
     return { currentUser, analyticsConfig, canRoute };
@@ -94,60 +94,72 @@ export default {
 <style lang="scss">
 @import '../assets/scss/mixins';
 
-$border-height: 3px;
+$nav-height: 48px;
 
 .navbar-default {
-  background-color: $color-accent-primary;
+  background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
   border: none;
-  border-top: $border-height solid $color-accent-secondary;
-  box-shadow: 0 $border-height 0 #dedede;
-  height: 30px + $border-height; // the way bootstrap is set up, the border eats the body.
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  height: $nav-height;
   margin-bottom: 0;
   min-height: auto;
 
   .navbar-brand {
     float: left;
-    font-size: $font-size-btn;
-    font-weight: bold;
-    height: auto;
-    letter-spacing: -0.02em;
-    line-height: 20px;
-    padding: 5px 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 800;
+    height: $nav-height;
+    letter-spacing: -0.01em;
+    padding: 0 20px;
 
     &, &:hover, &:focus { color: #fff; }
+
+    &:hover {
+      opacity: 0.92;
+    }
 
     &:focus {
       background-color: transparent;
       text-decoration: none;
     }
+
+    .navbar-logo {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+    }
   }
 
   .navbar-nav {
-    font-size: $font-size-btn;
+    font-size: 13px;
 
     > li > a {
-      &, &:hover, &:focus { color: #fff; }
+      &, &:hover, &:focus { color: rgba(255, 255, 255, 0.9); }
+      &:hover { color: #fff; }
     }
   }
 }
 
 #navbar-analytics-notice {
   @include text-link;
-  background-color: #ffed88;
-  border: 1px solid #e39941;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
   float: left;
   font-size: 10px;
-  margin-top: 6px;
-  margin-right: 30px;
-  padding: 1px 3px;
+  margin-top: 14px;
+  margin-right: 20px;
+  padding: 2px 8px;
 
   &:hover, &:focus {
-    background-color: #ffdc1c;
-    border-color: #ffed88;
+    background-color: #ffeeba;
+    border-color: #ffca2c;
   }
 }
 
-// Navbar is not collapsed.
 @media (min-width: 768px) {
   .navbar-default {
     border-radius: 0;
@@ -155,81 +167,99 @@ $border-height: 3px;
     .navbar-brand { margin-left: -15px; }
 
     .navbar-nav {
-      margin-top: -1 * $border-height;
-
       > li > a {
-        border-top: transparent solid $border-height;
-        padding: 5px 10px;
-        transition: 0.25s border-top-color;
+        padding: 0 14px;
+        height: $nav-height;
+        line-height: $nav-height;
+        box-sizing: border-box;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s ease;
 
         &:hover {
-          border-top-color: transparentize(#fff, 0.3);
-          transition-duration: 0s;
+          background-color: rgba(255, 255, 255, 0.08);
+          border-bottom-color: rgba(255, 255, 255, 0.5);
         }
 
         &:focus {
-          border-top-color: transparentize(#fff, 0.15);
-          box-shadow: 0 3px 0 transparentize(#000, 0.9);
+          background-color: rgba(255, 255, 255, 0.06);
+          border-bottom-color: rgba(255, 255, 255, 0.7);
           outline: none;
-          transition-duration: 0s;
         }
       }
 
       .active > a, .open > a {
-        box-shadow: 0 0 6px transparentize($color-accent-secondary, 0.7) inset;
-
         &, &:hover, &:focus {
-          background-color: #b40066;
-          border-top-color: #fff;
+          background-color: rgba(0, 0, 0, 0.15);
+          border-bottom-color: #fff;
           color: #fff;
+          box-shadow: none;
         }
       }
     }
   }
 
   .navbar-right {
-    // Counters the 15px padding of .navbar-collapse and the 15px padding of
-    // .container-fluid. The Bootstrap default is -15px.
     margin-right: -25px;
   }
 
   #navbar-actions { margin-left: 10px; }
 }
 
-// Navbar is collapsed.
 @media (max-width: 767px) {
   .navbar-default {
+    height: $nav-height;
+
     .navbar-toggle {
       border: none;
-      margin: -2px 5px;
+      margin: 8px 8px;
+      padding: 6px;
 
-      &:hover, &:focus { background-color: inherit; }
+      &:hover, &:focus { background-color: rgba(255, 255, 255, 0.1); }
 
-      .navbar-icon-bar { background-color: #fff; }
+      .navbar-icon-bar {
+        background-color: #fff;
+        width: 20px;
+        height: 2px;
+      }
     }
 
     .navbar-collapse {
-      background-color: $color-accent-secondary;
+      background: linear-gradient(180deg, #1b5e20 0%, #2e7d32 100%);
       border: none;
       position: relative;
       z-index: 99;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
     }
 
     .navbar-nav {
       margin-top: 0;
+      padding: 8px 0;
+
+      > li > a {
+        padding: 10px 20px;
+        border-left: 3px solid transparent;
+        transition: all 0.15s ease;
+      }
 
       .active > a, .open > a {
-        border-left: $border-height solid #fff;
-        padding-left: 15px - $border-height;
+        border-left-color: #fff;
 
         &, &:hover, &:focus {
-          background-color: $color-accent-secondary;
+          background-color: rgba(0, 0, 0, 0.15);
           color: #fff;
         }
       }
 
-      .open .dropdown-menu > li > a {
-        &, &:hover, &:focus { color: #fff; }
+      .open .dropdown-menu {
+        background-color: rgba(0, 0, 0, 0.1);
+        border: none;
+        padding: 4px 0;
+
+        > li > a {
+          padding: 8px 32px;
+          &, &:hover, &:focus { color: rgba(255, 255, 255, 0.9); }
+          &:hover { background-color: rgba(255, 255, 255, 0.08); }
+        }
       }
     }
   }
@@ -242,82 +272,80 @@ $border-height: 3px;
 {
   "en": {
     "action": {
-      // Used by screen readers to describe the button used to show or hide the navigation bar on small screens ("hamburger menu").
       "toggle": "Toggle navigation"
     },
-    "analyticsNotice": "Help improve Central!"
+    "analyticsNotice": "Help improve AGR-Collect!"
   }
 }
 </i18n>
 
-<!-- Autogenerated by destructure.js -->
 <i18n>
 {
   "cs": {
     "action": {
       "toggle": "Přepnout navigaci"
     },
-    "analyticsNotice": "Pomozte zlepšit Central!"
+    "analyticsNotice": "Pomozte zlepšit AGR-Collect!"
   },
   "de": {
     "action": {
       "toggle": "Navigation umschalten"
     },
-    "analyticsNotice": "Hilf Central zu verbessern!"
+    "analyticsNotice": "Hilf AGR-Collect zu verbessern!"
   },
   "es": {
     "action": {
       "toggle": "Alternar la navegación"
     },
-    "analyticsNotice": "Ayuda a mejorar Central"
+    "analyticsNotice": "Ayuda a mejorar AGR-Collect"
   },
   "fr": {
     "action": {
       "toggle": "Basculer la navigation"
     },
-    "analyticsNotice": "Aidez à améliorer Central !"
+    "analyticsNotice": "Aidez à améliorer AGR-Collect !"
   },
   "id": {
     "action": {
       "toggle": "Navigasi Toggle"
     },
-    "analyticsNotice": "Bantu Memperbaiki Central!"
+    "analyticsNotice": "Bantu Memperbaiki AGR-Collect!"
   },
   "it": {
     "action": {
       "toggle": "Attiva/disattiva navigazione"
     },
-    "analyticsNotice": "Aiuta a migliorare Central"
+    "analyticsNotice": "Aiuta a migliorare AGR-Collect"
   },
   "ja": {
     "action": {
       "toggle": "ナビゲーションを有効化"
     },
-    "analyticsNotice": "Centralの改善を支援！"
+    "analyticsNotice": "AGR-Collectの改善を支援！"
   },
   "pt": {
     "action": {
       "toggle": "Ocultar ou exibir a barra de navegação"
     },
-    "analyticsNotice": "Ajude a melhorar o Central!"
+    "analyticsNotice": "Ajude a melhorar o AGR-Collect!"
   },
   "sw": {
     "action": {
       "toggle": "Geuza urambazaji"
     },
-    "analyticsNotice": "Saidia kuboresha Central"
+    "analyticsNotice": "Saidia kuboresha AGR-Collect"
   },
   "zh": {
     "action": {
       "toggle": "切换导航"
     },
-    "analyticsNotice": "助力完善Central！"
+    "analyticsNotice": "助力完善AGR-Collect！"
   },
   "zh-Hant": {
     "action": {
       "toggle": "切換導航鈕"
     },
-    "analyticsNotice": "幫忙改善 Central!"
+    "analyticsNotice": "幫忙改善 AGR-Collect!"
   }
 }
 </i18n>

@@ -1,18 +1,5 @@
-<!--
-Copyright 2017 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div :class="features">
-    <!-- If the user's session is restored during the initial navigation, that
-    will affect how the navbar is rendered. -->
     <navbar v-if="!standalone" v-show="routerReady"/>
     <outdated-version/>
     <alerts/>
@@ -67,8 +54,6 @@ export default {
     const containerEl = useTemplateRef('containerEl');
     useAlert(toast, containerEl);
 
-    // Add background color to the html tag; this is done to avoid magenta
-    // splash on standalone routes such as FormPreview.
     router.isReady()
       .then(() => {
         if (!route.meta.standalone)
@@ -95,7 +80,6 @@ export default {
     this.callWait('checkVersion', this.checkVersion, (tries) =>
       (tries === 0 ? 15000 : 60000));
   },
-  // Reset backgroundColor after each test.
   beforeUnmount() {
     document.documentElement.style.backgroundColor = '';
   },
@@ -111,9 +95,6 @@ export default {
           if (previousVersion == null || this.centralVersion.versionText === previousVersion)
             return false;
 
-          // Alert the user about the version change, then keep alerting them.
-          // One benefit of this approach is that the user should see the toast
-          // even if there is another toast (say, about session expiration).
           this.callWait(
             'versionChange',
             () => {
@@ -124,8 +105,6 @@ export default {
           );
           return true;
         })
-        // This error could be the result of logout, which will cancel all
-        // requests.
         .catch(error =>
           (error.response != null && error.response.status === 404));
     }

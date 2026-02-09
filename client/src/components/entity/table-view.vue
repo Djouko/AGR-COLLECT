@@ -1,14 +1,3 @@
-<!--
-Copyright 2025 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <entity-table v-show="odataEntities.dataExists" ref="table"
     v-model:all-selected="allSelected" :properties="dataset.properties"
@@ -19,7 +8,6 @@ except according to the terms contained in the LICENSE file.
     :top="pagination.size"
     :filter="filter != null || !!searchTerm"
     :total-count="dataset.dataExists ? dataset.entities : 0"/>
-  <!-- @update:page is emitted on size change as well -->
   <Pagination v-if="pagination.count > 0"
     v-model:page="pagination.page" v-model:size="pagination.size"
     :count="pagination.count" :size-options="pageSizeOptions"
@@ -61,8 +49,6 @@ const { dataset, odataEntities, deletedEntityCount } = useRequestData();
 const pageSizeOptions = [250, 500, 1000];
 const pagination = reactive({ page: 0, size: pageSizeOptions[0], count: 0 });
 
-// For more information about how the snapshot filter works, see
-// SubmissionTableView.
 let snapshotFilter;
 const setSnapshotFilter = () => {
   snapshotFilter = '';
@@ -75,11 +61,7 @@ const setSnapshotFilter = () => {
   }
 };
 
-// `clear` indicates whether odataEntities should be cleared before sending the
-// request. `refresh` indicates whether the request is a background refresh
-// (whether the refresh button was pressed).
 const fetchChunk = (clear, refresh = false) => {
-  // Are we fetching the first chunk of entities or the next chunk?
   const first = clear || refresh;
   if (first) {
     setSnapshotFilter();
@@ -131,12 +113,9 @@ watch([() => props.deleted, () => props.filter, () => props.searchTerm], () => {
   fetchChunk(true);
 });
 const handlePageChange = () => {
-  // This function is called for size change as well. So when the total number of entities are
-  // less than the lowest size option, hence we don't need to make a request.
   if (odataEntities.count < pageSizeOptions[0]) return;
   fetchChunk(false);
 };
-// For defineExpose()
 const exposedFetch = {
   fetchData: (clear = true) => fetchChunk(clear, !clear),
   cancelFetch: () => { odataEntities.cancelRequest(); }

@@ -1,14 +1,3 @@
-<!--
-Copyright 2017 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div>
     <breadcrumbs v-if="project.dataExists" :links="breadcrumbLinks"/>
@@ -137,8 +126,6 @@ export default {
         resend
       }).catch(noop);
 
-      // If we send a request for this.forms, then we also clear this.datasets
-      // in case a change to this.forms has also changed this.datasets.
       if (!this.forms.dataExists) this.datasets.data = null;
     },
     fetchFieldKeys(resend) {
@@ -151,3 +138,4 @@ export default {
   }
 };
 </script>
+

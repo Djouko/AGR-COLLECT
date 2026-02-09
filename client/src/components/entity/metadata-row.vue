@@ -1,14 +1,3 @@
-<!--
-Copyright 2023 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <tr class="entity-metadata-row" :class="{ 'entity-row-selected': entity.__system.selected }">
     <td class="row-number">{{ $n(rowNumber, 'noGrouping') }}</td>
@@ -102,7 +91,6 @@ defineEmits(['selectionChanged']);
     padding-top: 4px;
     padding-bottom: 4px;
 
-    // Ensure that the column is wide enough that EntityActions does not wrap.
     min-width: 170px;
     &:lang(id) { min-width: 215px; }
   }
@@ -118,7 +106,7 @@ defineEmits(['selectionChanged']);
     &:empty { width: 75px; }
   }
   .updates {
-    color: #777;
+    color: #9ca3af;
     margin-left: auto;
     width: 41px;
 
@@ -137,6 +125,5 @@ defineEmits(['selectionChanged']);
   }
   .icon-warning { font-size: 12px; }
   .col-deleted-at { color: $color-danger; }
-  // The actions themselves are styled via the icon-btn-group mixin.
 }
 </style>

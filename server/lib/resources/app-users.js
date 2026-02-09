@@ -7,6 +7,7 @@
 // including this file, may be copied, modified, propagated, or distributed
 // except according to the terms contained in the LICENSE file.
 
+const { sql } = require('slonik');
 const { FieldKey } = require('../model/frames');
 const { getOrNotFound } = require('../util/promise');
 const { success } = require('../util/http');
@@ -38,5 +39,24 @@ module.exports = (service, endpoint) => {
       .then((fk) => Actors.del(fk.actor))
       .then(success)));
 
-};
+  // Update field key display name
+  service.patch('/projects/:projectId/app-users/:id', endpoint(({ FieldKeys, Projects, run }, { auth, body, params }) =>
+    Projects.getById(params.projectId)
+      .then(getOrNotFound)
+      .then((project) => auth.canOrReject('field_key.create', project))
+      .then((project) => FieldKeys.getByProjectAndActorId(project.id, params.id))
+      .then(getOrNotFound)
+      .then((fk) => run(sql`UPDATE actors SET "displayName"=${body.displayName}, "updatedAt"=clock_timestamp() WHERE id=${fk.actor.id}`)
+        .then(() => fk.with({ displayName: body.displayName })))));
 
+  // Restore access by creating a new session
+  service.post('/projects/:projectId/app-users/:id/session', endpoint(({ FieldKeys, Projects, Sessions }, { auth, params }) =>
+    Projects.getById(params.projectId)
+      .then(getOrNotFound)
+      .then((project) => auth.canOrReject('field_key.create', project))
+      .then((project) => FieldKeys.getByProjectAndActorId(project.id, params.id))
+      .then(getOrNotFound)
+      .then((fk) => Sessions.create(fk.actor, new Date('9999-12-31T23:59:59z'))
+        .then((session) => fk.withAux('session', session)))));
+
+};

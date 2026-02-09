@@ -1,14 +1,3 @@
-/*
-Copyright 2019 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
-*/
 import { odataLiteral } from './odata';
 
 // Returns `true` if `data` looks like a Backend Problem and `false` if not.
@@ -81,6 +70,7 @@ export const apiPaths = {
   assignment: (role, actorId) => `/v1/assignments/${role}/${actorId}`,
   userSitePreferences: (k) => `/v1/user-preferences/site/${k}`,
   userProjectPreferences: (projectId, k) => `/v1/user-preferences/project/${projectId}/${k}`,
+  projects: (query = undefined) => `/v1/projects${queryString(query)}`,
   project: projectPath(''),
   projectAssignments: projectPath('/assignments'),
   projectAssignment: (projectId, role, actorId) =>
@@ -187,9 +177,20 @@ export const apiPaths = {
   entityVersions: entityPath('/versions'),
   entityRestore: entityPath('/restore'),
   fieldKeys: projectPath('/app-users'),
+  fieldKey: (projectId, fieldKeyId) => `/v1/projects/${projectId}/app-users/${fieldKeyId}`,
+  fieldKeySession: (projectId, fieldKeyId) => `/v1/projects/${projectId}/app-users/${fieldKeyId}/session`,
   serverUrlForFieldKey: (token, projectId) =>
     `/v1/key/${token}/projects/${projectId}`,
   audits: (query) => `/v1/audits${queryString(query)}`,
+  // Sites Management
+  sites: (query = undefined) => `/v1/sites${queryString(query)}`,
+  site: (id) => `/v1/sites/${id}`,
+  projectSites: (projectId, query = undefined) => `/v1/projects/${projectId}/sites${queryString(query)}`,
+  projectSite: (projectId, siteId) => `/v1/projects/${projectId}/sites/${siteId}`,
+  siteMedia: (siteId, filename = undefined) => filename ? `/v1/sites/${siteId}/media/${encodeURIComponent(filename)}` : `/v1/sites/${siteId}/media`,
+  siteMediaItem: (siteId, mediaId) => `/v1/sites/${siteId}/media/${mediaId}`,
+  siteMediaContent: (siteId, mediaId) => `/v1/sites/${siteId}/media/${mediaId}/content`,
+  siteSubmissions: (siteId) => `/v1/sites/${siteId}/submissions`,
 };
 
 

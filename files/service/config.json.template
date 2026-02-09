@@ -32,7 +32,8 @@
       "apiKey": "${ENKETO_API_KEY}"
     },
     "env": {
-      "domain": "https://nginx",
+      "domain": "https://${DOMAIN}",
+      "internalDomain": "https://nginx",
       "sysadminAccount": "${SYSADMIN_EMAIL}"
     },
     "oidc": {

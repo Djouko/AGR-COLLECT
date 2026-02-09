@@ -1,14 +1,3 @@
-<!--
-Copyright 2025 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div class="form-edit-section">
     <div>
@@ -43,9 +32,6 @@ defineProps({
     type: String,
     required: true
   },
-  // `true` to show dots down the lefthand side of the section. To adjust the
-  // number of dots, adjust the bottom margin of .form-edit-section-body from
-  // the parent component.
   dotted: Boolean,
   warning: Boolean
 });
@@ -89,14 +75,9 @@ $heading-margin-bottom: 10px;
   @include icon-box;
   font-size: 24px;
   padding-inline: 0;
-  // 44px = 10px of padding on the left and right + 24px for the icon. The width
-  // of the icon varies significantly, but the height of the icon is a
-  // consistent 24px. If the icon is wider than 24px, that will just eat into
-  // the padding.
   width: 44px;
   height: 44px;
 
-  // Use flexbox to center the icon.
   display: flex;
   align-items: center;
   justify-content: center;
@@ -108,7 +89,7 @@ $heading-margin-bottom: 10px;
 }
 
 .form-edit-section-dots {
-  border-left: 2px dotted #999;
+  border-left: 2px dotted #d1d5db;
   height: 100%;
   margin-block: 9px;
 }
@@ -143,8 +124,6 @@ $heading-margin-bottom: 10px;
   color: $color-accent-primary;
   padding: 5px 9px;
 
-  // Hide the entire element if no tag slot is provided. We don't want the icon
-  // to be shown in that case.
   &:has(> :nth-child(2):empty) { display: none; }
 
   .icon-circle { font-size: 12px; }

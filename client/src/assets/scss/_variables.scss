@@ -1,19 +1,7 @@
-/*
-Copyright 2017 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
-*/
-
 // Core
-$color-accent-primary: #bd006b;
-$color-accent-secondary: #8d0050;
-$color-page-background: #f7f7f7;
+$color-accent-primary: #2e7d32;
+$color-accent-secondary: #1b5e20;
+$color-page-background: #f9fafb;
 
 // Media query breakpoints - copied from bootstrap
 $screen-xs-min: 480px;
@@ -26,7 +14,7 @@ $z-index-modal: 1050;
 $z-index-modal-backdrop: 1040;
 
 // Text
-$color-text: #333;
+$color-text: #111827;
 $font-family-monospace: Monaco, Menlo, Consolas, "Courier New", monospace;
 $color-text-secondary: #9499A5;
 
@@ -51,13 +39,13 @@ $color-highlight: #faf1cd;
 
 // Buttons and inputs
 $color-action-foreground: #0c7bd1;
-$color-action-background: #009ecc;
-$color-action-background-hover: #0086ad;
-$color-action-background-disabled: #999;
+$color-action-background: #2e7d32;
+$color-action-background-hover: #256b29;
+$color-action-background-disabled: #9ca3af;
 $color-action-light: #d0e7f1;
-$color-action-overlay: #0096c1;
-$color-input: #555;
-$color-input-inactive: #777;
+$color-action-overlay: #388e3c;
+$color-input: #374151;
+$color-input-inactive: #9ca3af;
 $font-size-btn: 12px;
 $hpadding-btn: 10px;
 $padding-bottom-btn: 5px;
@@ -68,7 +56,7 @@ $font-size-dropdown-menu: $font-size-btn;
 $min-width-dropdown-menu: 150px;
 
 // <dl>
-$border-bottom-dl: 1px solid #ddd;
+$border-bottom-dl: 1px solid #e5e7eb;
 $padding-block-dl: 10px;
 
 // Forms
@@ -77,12 +65,12 @@ $padding-top-form-control: 6px;
 // Tables
 $margin-bottom-table: 20px;
 // Heading
-$border-bottom-table-heading: 1px solid #bbb;
-$color-table-heading-background: #ddd;
+$border-bottom-table-heading: 1px solid #e5e7eb;
+$color-table-heading-background: #f3f4f6;
 $font-size-table-heading: 12px;
 $padding-table-heading: 8px 9px 6px;
 // Data
-$border-top-table-data: 1px solid #ddd;
+$border-top-table-data: 1px solid #f0f0f0;
 $padding-bottom-table-data: 8px;
 $padding-left-table-data: 8px;
 $padding-right-table-data: 8px;
@@ -97,10 +85,10 @@ $padding-panel-body: 15px;
 // Navs
 $hpadding-nav-tab: 8px;
 
-$color-subpanel-background: #eee;
-$color-subpanel-active: #ddd;
-$color-subpanel-border: #e6e6e6;
-$color-subpanel-border-strong: #c3c3c3;
+$color-subpanel-background: #f3f4f6;
+$color-subpanel-active: #e5e7eb;
+$color-subpanel-border: #e5e7eb;
+$color-subpanel-border-strong: #d1d5db;
 
 // Easing
 $ease-extreme-out: cubic-bezier(.05, .9, 0, 1);

@@ -1,14 +1,3 @@
-/*
-Copyright 2020 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
-*/
 import { always, equals } from 'ramda';
 
 import AccountLogin from './components/account/login.vue';
@@ -743,6 +732,66 @@ const routes = [
       requireLogin: false,
       skipAutoLogout: true,
       title: () => [form.nameOrId]
+    }
+  }),
+
+  // Reports Page - Accessible to logged in users (BF4.1)
+  asyncRoute({
+    path: '/reports',
+    component: 'ReportsIndex',
+    loading: 'page',
+    meta: {
+      requireLogin: true,
+      title: () => [i18n.t('title.reports')]
+    }
+  }),
+
+  // Sites Management Page - Accessible to logged in users (BF3.2, BF4.2)
+  asyncRoute({
+    path: '/sites',
+    component: 'SitesIndex',
+    loading: 'page',
+    meta: {
+      requireLogin: true,
+      title: () => [i18n.t('title.sites')]
+    }
+  }),
+
+  // Legal/Institutional Pages - Accessible to all users (logged in or not)
+  asyncRoute({
+    path: '/legal/terms',
+    component: 'LegalTerms',
+    loading: 'page',
+    meta: {
+      requireLogin: false,
+      title: () => [i18n.t('title.legal.terms')]
+    }
+  }),
+  asyncRoute({
+    path: '/legal/privacy',
+    component: 'LegalPrivacy',
+    loading: 'page',
+    meta: {
+      requireLogin: false,
+      title: () => [i18n.t('title.legal.privacy')]
+    }
+  }),
+  asyncRoute({
+    path: '/legal/guide',
+    component: 'LegalGuide',
+    loading: 'page',
+    meta: {
+      requireLogin: false,
+      title: () => [i18n.t('title.legal.guide')]
+    }
+  }),
+  asyncRoute({
+    path: '/legal/contacts',
+    component: 'LegalContacts',
+    loading: 'page',
+    meta: {
+      requireLogin: false,
+      title: () => [i18n.t('title.legal.contacts')]
     }
   }),
 

@@ -1,14 +1,3 @@
-<!--
-Copyright 2022 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <tr class="project-form-row">
     <td class="col-icon">
@@ -113,8 +102,6 @@ export default {
       type: Object,
       required: true
     },
-    // Whether to show the Form icon or not
-    // We show it only for the first row
     showIcon: {
       type: Boolean,
       required: true
@@ -181,33 +168,59 @@ export default {
 @import '../../assets/scss/mixins';
 
 .project-form-row {
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: #f9fafb !important;
+  }
+
   td {
-    font-size: 16px;
-    padding: 4px 0px 4px 6px;
-    color: #333;
-    a { @include text-link; }
+    font-size: 15px;
+    padding: 8px 6px 8px 10px;
+    color: #111827;
+    border-top: 1px solid #f3f4f6;
+
+    a {
+      @include text-link;
+      font-weight: 500;
+    }
+  }
+
+  .form-name {
+    font-weight: 500;
   }
 
   .duplicate-form-id {
     font-family: $font-family-monospace;
-    font-size: 12px;
+    font-size: 11px;
     padding-left: 6px;
+    color: #9ca3af;
   }
 
   .review-state, .total-submissions, .not-published {
     text-align: right;
-    padding-right: 10px;
+    padding-right: 12px;
     width: 80px;
+    font-size: 13px;
+    color: #6b7280;
   }
 
-  .last-submission{
+  .last-submission {
     text-align: right;
     width: 170px;
+    font-size: 13px;
+    color: #6b7280;
+  }
+
+  .not-published {
+    color: #9ca3af;
+    font-style: italic;
+    font-size: 13px;
   }
 
   [class*='icon'] {
     margin-left: 5px;
-    color: #888;
+    color: #d1d5db;
   }
 }
 </style>

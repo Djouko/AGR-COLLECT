@@ -1,15 +1,3 @@
-<!--
-Copyright 2024 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
-
 <!-- Specifying :key so that if `to` changes, the element will be replaced. If a
 hover card is shown next to the element, it will be hidden. -->
 <template>
@@ -36,9 +24,6 @@ const props = defineProps({
     type: String,
     required: true
   },
-  // A submission in the format of a REST API response (not OData). It is not
-  // expected to be a transformed submission resource. For example,
-  // props.submission.instanceNameOrId is not expected to be defined.
   submission: {
     type: Object,
     required: true

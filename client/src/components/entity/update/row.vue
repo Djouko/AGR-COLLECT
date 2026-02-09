@@ -1,14 +1,3 @@
-<!--
-Copyright 2023 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <tr class="entity-update-row"
     :class="{ 'uncommitted-change': modelValue != null }">
@@ -75,10 +64,6 @@ const setMinHeight = () => {
 watch(() => props.oldValue, () => { minHeightOutdated = true; });
 
 const update = (value) => {
-  // We emit `undefined` if `value` is the same as props.oldValue. If `value` is
-  // an empty string, and props.oldValue is nullish, the two are considered to
-  // be the same. We emit `undefined` rather than `null` so that axios won't
-  // send the value.
   emit('update:modelValue', value !== (props.oldValue ?? '') ? value : undefined);
 };
 
@@ -105,8 +90,6 @@ defineExpose({ textarea: computed(() => ({ ...textarea.value, resize })) });
   .old-value {
     padding-top: $vpadding;
 
-    // Add $padding-top-form-control to the <div> rather than the <td> so that
-    // it is included in the minHeight prop passed to TextareaAutosize.
     div {
       padding-top: $padding-top-form-control;
       padding-bottom: $padding-top-form-control;
@@ -119,7 +102,6 @@ defineExpose({ textarea: computed(() => ({ ...textarea.value, resize })) });
 
   .label-cell { @include text-overflow-ellipsis; }
   label {
-    // Needed for the text to truncate.
     display: inline;
     margin-bottom: 0;
   }
@@ -130,7 +112,7 @@ defineExpose({ textarea: computed(() => ({ ...textarea.value, resize })) });
 
     &.empty {
       @include italic;
-      color: #999;
+      color: #9ca3af;
     }
   }
 

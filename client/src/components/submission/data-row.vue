@@ -1,14 +1,3 @@
-<!--
-Copyright 2017 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <tr :class="htmlClass">
     <template v-if="submission.__system.status == null">
@@ -49,9 +38,6 @@ but that again was significantly slower.
 */
 
 const fieldClass = (field) => {
-  // A field could have a `binary` property that is `true` but a `type` property
-  // that does not equal 'binary'. Backend treats the `binary` property as
-  // authoritative.
   if (field.binary === true) return 'binary-field';
   if (field.type === 'int') return 'int-field';
   if (field.type === 'decimal') return 'decimal-field';
@@ -107,9 +93,6 @@ const htmlClass = computed(() =>
 #submission-table {
   .int-field, .decimal-field { text-align: right; }
 
-  // Geopoint width should always have enough room to show full data.
-  // This neeeds an extra CSS selector to not be overwritten by
-  // max-width:250px in submission/table.vue
   .table-freeze-scrolling .geopoint-field { max-width: 500px; }
 
   .binary-field { text-align: center; }
@@ -119,7 +102,7 @@ const htmlClass = computed(() =>
     $icon-lock-margin-right: 12px;
     .icon-lock {
       font-size: 16px;
-      color: #666;
+      color: #6b7280;
       margin-left: $icon-lock-margin-left;
       margin-right: $icon-lock-margin-right;
       vertical-align: -2px;
@@ -132,14 +115,11 @@ const htmlClass = computed(() =>
       .encryption-message { display: none; }
 
       .encryption-overlay {
-        background-color: #ddd;
+        background-color: #e5e7eb;
         display: inline-block;
         height: 12px;
         position: absolute;
-        // Adding 4px in order to vertically center the overlay.
         top: $padding-top-table-data + 4px;
-        // 12px is the width of the .icon-lock (plus a pixel or two for good
-        // measure).
         width: calc(100% - #{$padding-left-table-data + $icon-lock-margin-left} -
           12px - #{$icon-lock-margin-right + $padding-right-table-data});
       }

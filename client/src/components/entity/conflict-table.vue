@@ -1,14 +1,3 @@
-<!--
-Copyright 2023 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div id="entity-conflict-table" ref="el">
     <p v-if="versions.length === 0" class="empty-table-message">
@@ -123,12 +112,9 @@ const props = defineProps({
   linkTarget: String
 });
 
-// Iterate over all versions just once.
 const summary = computed(() => {
   let lastGoodVersion;
-  // The keys of dataReceived from each unresolved conflict
   const allReceived = new Set();
-  // The offline branches to show in the table
   const branches = new Set();
   for (const [i, version] of props.versions.entries()) {
     if (version.lastGoodVersion) lastGoodVersion = version.version;
@@ -140,14 +126,7 @@ const summary = computed(() => {
 
     const { branch } = version;
     if (branch != null && version === branch.first && branch.length !== 1 &&
-      // The versions from the branch must all be contiguous. It's OK if they're
-      // not contiguous with the trunk version.
       branch.last.version === branch.first.version + branch.length - 1) {
-      // We only show the branch if all the versions from the branch are shown
-      // in the table. Otherwise, it may be unclear how long the branch was and
-      // that there were other versions that were part of it. lastIndex is the
-      // expected index of the last version from the branch if all the versions
-      // from the branch are shown.
       const lastIndex = i + branch.length - 1;
       if (lastIndex < props.versions.length &&
         props.versions[lastIndex] === branch.last)
@@ -159,9 +138,6 @@ const summary = computed(() => {
 const lastGoodVersion = computed(() => summary.value.lastGoodVersion);
 const branches = computed(() => summary.value.branches);
 
-// Property names
-// The component assumes that this data will exist when the component is
-// created.
 const { dataset } = useRequestData();
 const propertyNames = computed(() => {
   const result = [];
@@ -170,7 +146,6 @@ const propertyNames = computed(() => {
     if (allReceived.has(name)) result.push(name);
   }
 
-  // Check for properties that are in allReceived but not dataset.properties.
   const expectedCount = allReceived.has('label')
     ? allReceived.size - 1
     : allReceived.size;
@@ -184,7 +159,6 @@ const propertyNames = computed(() => {
   return result;
 });
 
-// Resize columns using a strategy similar to useColumnGrow().
 const el = ref(null);
 const table = ref(null);
 const firstHeader = ref(null);
@@ -197,23 +171,15 @@ const resize = () => {
   const containerWidth = el.value.getBoundingClientRect().width;
   if (containerWidth === 0) return;
 
-  // Undo previous resizing.
   firstHeader.value.style.width = '';
   for (const header of versionHeaders.value)
     header.style.width = '';
 
-  // This makes the width of each column equal to its content width. After
-  // getting those content widths and setting the new column widths, we will
-  // remove this style.
   table.value.style.width = 'auto';
 
-  // Resize the first column.
   const firstHeaderWidth = clampWidth(firstHeader.value.getBoundingClientRect().width);
   firstHeader.value.style.width = px(firstHeaderWidth);
 
-  // Resize the version columns, giving each column the same width. Keep the
-  // column width between the min width and the maximum content width, but
-  // otherwise use the remaining width of the container.
   const maxVersionWidth = clampWidth(versionHeaders.value.reduce(
     (acc, header) => Math.max(acc, header.getBoundingClientRect().width),
     0
@@ -227,7 +193,6 @@ const resize = () => {
   for (const header of versionHeaders.value)
     header.style.width = versionWidthPx;
 
-  // Stretch the last column if there's leftover width in the container.
   if (containerWidth > firstHeaderWidth + props.versions.length * versionWidth) {
     table.value.style.width = '100%';
     last(versionHeaders.value).style.width = '';
@@ -253,7 +218,7 @@ defineExpose({ resize });
   th:first-child { text-align: right; }
 
   th, td { @include text-overflow-ellipsis; }
-  td { border-left: 1px solid #bbb; }
+  td { border-left: 1px solid #d1d5db; }
 
   tbody tr:nth-child(n + 2) {
     th, td {
@@ -269,7 +234,7 @@ defineExpose({ resize });
   .property-name { font-family: $font-family-monospace; }
 
   .unchanged {
-    color: #888;
+    color: #9ca3af;
 
     font-style: italic;
     &:lang(ja), &:lang(zh) { font-style: normal; }
@@ -279,7 +244,7 @@ defineExpose({ resize });
     font-size: 16px;
     vertical-align: -2px;
   }
-  .icon-history { color: #888; }
+  .icon-history { color: #9ca3af; }
   .icon-check-circle { color: $color-success; }
   .icon-question-circle { color: $color-warning-dark; }
   .icon-warning { color: $color-danger-dark; }
@@ -306,7 +271,6 @@ defineExpose({ resize });
   th, td {
     border-top: none;
 
-    // Increase selector specificity in order to override styles above.
     #entity-conflict-table & {
       padding-bottom: 4px;
       padding-top: 4px;
@@ -315,7 +279,7 @@ defineExpose({ resize });
 
   td > div {
     @include text-overflow-ellipsis;
-    background-color: #888;
+    background-color: #9ca3af;
     border-radius: 6px;
     color: #fff;
     font-size: 12px;
@@ -353,7 +317,6 @@ defineExpose({ resize });
 }
 </i18n>
 
-<!-- Autogenerated by destructure.js -->
 <i18n>
 {
   "cs": {

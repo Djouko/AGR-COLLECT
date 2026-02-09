@@ -1,15 +1,3 @@
-<!--
-Copyright 2023 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
-
 <!-- Parts of this component are based on the npm package
 vue-password-strength-meter 1.7.2, which uses the MIT license.
 https://github.com/apertureless/vue-password-strength-meter -->
@@ -46,7 +34,7 @@ const score = computed(() => {
 @import '../assets/scss/mixins';
 
 .password-strength {
-  background-color: #ddd;
+  background-color: #e5e7eb;
   float: right;
   height: 2px;
   margin-bottom: 20px;
@@ -54,8 +42,6 @@ const score = computed(() => {
   position: relative;
   width: 50%;
 
-  // Use the borders of two pseduo-elements to create 4 blank spaces (gaps),
-  // resulting in 5 bars.
   $between-bars: 5px;
   $bar-width: calc(20% - #{math.div(4 * $between-bars, 5)});
   &::before, &::after {
@@ -84,10 +70,6 @@ const score = computed(() => {
   }
   [data-score="1"] {
     background-color: $color-danger;
-    // 20% is somewhere between the two bars (it is greater than $bar-width and
-    // less than $bar-width + $between-bars). But since the pseudo-elements have
-    // a higher z-index, only $bar-width of the background color will be
-    // visible (as desired).
     width: 20%;
   }
   [data-score="2"] {

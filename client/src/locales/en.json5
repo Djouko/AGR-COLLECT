@@ -11,7 +11,18 @@
     "editProfile": "Edit Profile",
     "download": "Download",
     "pageNotFound": "Page Not Found",
-    "details": "Details"
+    "details": "Details",
+    // Reports page (BF4.1)
+    "reports": "Reports & Statistics",
+    // Sites Management page (BF3.2, BF4.2)
+    "sites": "Sites Management",
+    // Legal/Institutional pages
+    "legal": {
+      "terms": "Terms of Use",
+      "privacy": "Privacy Policy",
+      "guide": "AGR-Guide",
+      "contacts": "Contact Us"
+    }
   },
   "projectShow": {
     "tab": {
@@ -39,8 +50,8 @@
     "none": "None",
     "admin": "Administrator",
     "manager": "Project Manager",
-    "viewer": "Project Viewer",
-    "formfill": "Data Collector"
+    "viewer": "Sponsor",
+    "formfill": "Field Agent"
   },
   "formState": {
     // Form States control the lifecycle state of each Form. "Open" is one Form

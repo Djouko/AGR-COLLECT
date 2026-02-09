@@ -1,14 +1,3 @@
-<!--
-Copyright 2025 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div class="infonav-button dropdown">
     <router-link v-if="link != null" class="btn btn-link" :to="link">
@@ -36,7 +25,6 @@ defineOptions({
   name: 'Infonav'
 });
 defineProps({
-  // If a link is provided, the button will navigate to that link when clicked instead of dropping down.
   link: String
 });
 
@@ -50,11 +38,11 @@ const toggleId = `${idPrefix}-toggle`;
 @import '../assets/scss/variables';
 
   #page-head:not(:hover):not(:focus-within) .infonav-button {
-    color: #999;
+    color: #9ca3af;
     a {
-      color: #999;
+      color: #9ca3af;
       [class^="icon-"] {
-        color: #aaa;
+        color: #d1d5db;
       }
     }
   }
@@ -69,7 +57,6 @@ const toggleId = `${idPrefix}-toggle`;
     }
 
     &:not(.open) > .btn:focus {
-      // overrides bootstrap .btn focus
       color: $color-action-foreground;
     }
 
@@ -88,16 +75,19 @@ const toggleId = `${idPrefix}-toggle`;
     }
 
     .dropdown-menu {
-      font-size: 15px;
-      border: none;
-      border-radius: 2px;
-      margin-top: 0px;
+      font-size: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-top: 4px;
       min-width: 100%;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      padding: 4px 0;
 
       li a {
         max-width: 300px;
         overflow: hidden;
         text-overflow: ellipsis;
+        padding: 7px 16px;
       }
     }
   }

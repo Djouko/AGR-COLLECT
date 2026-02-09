@@ -1,14 +1,3 @@
-<!--
-Copyright 2017 ODK Central Developers
-See the NOTICE file at the top-level directory of this distribution and at
-https://github.com/getodk/central-frontend/blob/master/NOTICE.
-
-This file is part of ODK Central. It is subject to the license terms in
-the LICENSE file found in the top-level directory of this distribution and at
-https://www.apache.org/licenses/LICENSE-2.0. No part of ODK Central,
-including this file, may be copied, modified, propagated, or distributed
-except according to the terms contained in the LICENSE file.
--->
 <template>
   <div id="submission-list">
     <loading :state="fields.initiallyLoading"/>
@@ -30,7 +19,6 @@ except according to the terms contained in the LICENSE file.
             v-model:reviewState="reviewStates"
             :disabled="deleted" :disabled-message="deleted ? $t('filterDisabledMessage') : null"/>
         </form>
-        <!-- TODO: merge these two forms -->
         <form v-if="!draft" class="form-inline field-dropdown-form" @submit.prevent>
           <submission-field-dropdown
             v-if="selectedFields != null && fields.selectable.length > 11"
@@ -48,12 +36,14 @@ except according to the terms contained in the LICENSE file.
           :button-appearance="true" :disabled-message="deleted ? $t('noMapDeleted') : $t('noMapEncryption')"/>
         <teleport-if-exists v-if="formVersion.dataExists && odata.dataExists"
           :to="'.form-submissions-heading-row'">
-          <submission-download-button :form-version="formVersion"
-            :aria-disabled="deleted"
-            :filtered="odataFilter != null && !deleted"
-            v-tooltip.aria-describedby="deleted ? $t('downloadDisabled') : null"
-            @download="showDownloadModal"
-            @download-filtered="showDownloadModal(true)"/>
+          <div class="submission-actions-group">
+            <submission-download-button :form-version="formVersion"
+              :aria-disabled="deleted"
+              :filtered="odataFilter != null && !deleted"
+              v-tooltip.aria-describedby="deleted ? $t('downloadDisabled') : null"
+              @download="showDownloadModal"
+              @download-filtered="showDownloadModal(true)"/>
+          </div>
         </teleport-if-exists>
       </div>
 
@@ -163,13 +153,12 @@ export default {
   },
   emits: ['fetch-keys', 'fetch-deleted-count', 'toggle-qr'],
   setup(props) {
-    const { form, keys, resourceView, odata, submitters, deletedSubmissionCount } = useRequestData();
+    const { form, keys, resourceView, odata, submitters, deletedSubmissionCount, project } = useRequestData();
     const formVersion = props.draft
       ? resourceView('formDraft', (data) => data.get())
       : form;
     const fields = useFields();
 
-    // Filter query parameters
     const submitterIds = useQueryRef({
       fromQuery: (query) => {
         const stringIds = arrayQuery(query.submitterId, {
@@ -207,7 +196,7 @@ export default {
     const { request } = useRequest();
 
     return {
-      form, keys, fields, formVersion, odata, submitters, deletedSubmissionCount,
+      form, keys, fields, formVersion, odata, submitters, deletedSubmissionCount, project,
       submitterIds, submissionDateRange, reviewStates, allReviewStates,
       dataView, viewOptions,
       request
@@ -215,22 +204,14 @@ export default {
   },
   data() {
     return {
-      // selectedFields will be an array of fields. It needs to be shallow so
-      // that the elements of the array are not reactive proxies. That's
-      // important for SubmissionFieldDropdown, which will do exact equality
-      // checks. (The selected fields that it passes to the Multiselect must be
-      // among the options.)
       selectedFields: shallowRef(null),
       refreshing: false,
-      // Modals
       downloadModal: modalData(),
       reviewModal: modalData(),
       deleteModal: modalData(),
       restoreModal: modalData(),
 
-      // state that indicates whether we need to show delete confirmation dialog
       confirmDelete: true,
-      // state that indicates whether we need to show restore confirmation dialog
       confirmRestore: true,
 
       awaitingResponses: new Set()
@@ -278,7 +259,6 @@ export default {
       }
       if (this.reviewStates.length !== this.allReviewStates.length) {
         query.reviewState = this.reviewStates.map(reviewState =>
-          // Undo odataLiteral(): remove quotes.
           (reviewState === 'null' ? reviewState : reviewState.slice(1, -1)));
       }
       return Object.keys(query).length !== 0 ? query : null;
@@ -290,7 +270,6 @@ export default {
       if (!this.odata.dataExists) return '';
       if (this.odata.value.length > 0) return '';
 
-      // Cases related to submission deletion
       if (this.odata.removedSubmissions.size === this.odata.count && this.odata.count > 0) {
         return this.deleted ? this.$t('deletedSubmission.allRestored') : this.$t('allDeleted');
       }
@@ -310,12 +289,6 @@ export default {
   watch: {
     'odata.count': {
       handler() {
-        // Update this.formVersion.submissions to match this.odata.count.
-        // this.odata.count is more likely to be up-to-date, since it's
-        // refreshed more frequently. We don't update this.formVersion if
-        // this.odata is a subset of submissions. That includes when the map
-        // view sets this.odata, as some submissions might not have geo data and
-        // won't appear on the map.
         if (this.formVersion.dataExists && this.odata.dataExists &&
           this.dataView === 'table' && !this.odataFilter && !this.deleted)
           this.formVersion.submissions = this.odata.count;
@@ -330,7 +303,6 @@ export default {
   },
   methods: {
     setDefaultSelectedFields() {
-      // We also use 11 in the SubmissionFieldDropdown v-if.
       const defaultFields = this.fields.selectable.length <= 11
         ? this.fields.selectable
         : this.fields.selectable.slice(0, 10);
@@ -359,10 +331,8 @@ export default {
       this.$refs.view.refresh()
         .then(() => { this.refreshing = false; });
 
-      // emit event to parent component to re-fetch deleted Submissions count
       if (!this.deleted && !this.draft) this.$emit('fetch-deleted-count');
 
-      // emit event to parent component to re-fetch keys if needed
       if (this.formVersion.keyId != null && this.keys.length === 0)
         this.$emit('fetch-keys');
     },
@@ -470,8 +440,6 @@ export default {
 @import '../../assets/scss/variables';
 
 #submission-list {
-  // Make sure that there is enough space for the DateRangePicker when it is
-  // open.
   &:has(.date-range-picker) { min-height: 375px; }
 }
 
@@ -479,23 +447,14 @@ export default {
   align-items: center;
   display: flex;
   flex-wrap: wrap-reverse;
-  // This results in 10px of space between elements on the row, as well as 10px
-  // between rows if elements start wrapping. The main example of that is that
-  // the download button can wrap above the other actions if the viewport is not
-  // wide enough.
   gap: 10px;
 }
 
-// Adjust the spacing between actions on the draft testing page.
 #submission-list-test-in-browser {
   ~ .form-inline {
-    // It is possible for .form-inline to be :empty, but we still render it so
-    // that the buttons that follow it are shown on the righthand side of the
-    // page.
     margin-left: auto;
 
     #submission-field-dropdown {
-      // There are no filters, so no need for margin-left.
       margin-left: 0;
     }
   }
@@ -507,6 +466,12 @@ export default {
 
 #submission-table:has(tbody tr) + .empty-table-message {
   display: none;
+}
+
+.submission-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 </style>
 
@@ -535,7 +500,6 @@ export default {
 }
 </i18n>
 
-<!-- Autogenerated by destructure.js -->
 <i18n>
 {
   "cs": {
