@@ -158,7 +158,7 @@ export default {
     }
   },
   "fr": {
-    "draftTitle": "Ce formulaire n'a pas encore de version publiée. Il n’apparaîtra pas sur les appareils tant qu'une ébauche ne sera pas publié. Une fois que vous aurez publié le formulaire, les paramètres ci-dessous seront utilisés.",
+    "draftTitle": "Ce formulaire n'a pas encore de version publiée. Il n'apparaîtra pas sur les appareils tant qu'un brouillon ne sera pas publié. Une fois que vous aurez publié le formulaire, les paramètres ci-dessous seront utilisés.",
     "field": {
       "state": "État",
       "appUserAccess": "Accès d'utilisateurs mobiles"

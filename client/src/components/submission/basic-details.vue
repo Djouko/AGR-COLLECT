@@ -5,10 +5,6 @@
       <loading :state="initiallyLoading"/>
       <dl v-if="dataExists">
         <div>
-          <dt>{{ $t('header.instanceId') }}</dt>
-          <dd><span v-tooltip.text>{{ submission.__id }}</span></dd>
-        </div>
-        <div>
           <dt>{{ $t('header.submitterName') }}</dt>
           <dd>
             <span v-tooltip.text>{{ submission.__system.submitterName }}</span>
@@ -28,18 +24,6 @@
           <dt>{{ $t('formVersion') }}</dt>
           <dd>
             <form-version-string :version="submission.__system.formVersion"/>
-          </dd>
-        </div>
-        <div v-if="submission.__system.deviceId != null">
-          <dt>{{ $t('deviceId') }}</dt>
-          <dd>
-            <span v-tooltip.text>{{ submission.__system.deviceId }}</span>
-          </dd>
-        </div>
-        <div v-if="submissionVersion.userAgent != null">
-          <dt>{{ $t('userAgent') }}</dt>
-          <dd id="submission-basic-details-user-agent">
-            {{ submissionVersion.userAgent }}
           </dd>
         </div>
         <div v-if="submission.__system.attachmentsExpected !== 0">

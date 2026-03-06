@@ -14,39 +14,7 @@
             </i18n-t>
           </div>
         </div>
-        <div class="panel panel-simple panel-web-forms">
-          <div class="panel-heading">
-            <h1 class="panel-title">
-              <span class="badge beta">
-                {{ $t('common.beta') }}
-              </span>
-              {{ $t('webFormsSetting.webForms') }}
-            </h1>
-          </div>
-          <div class="panel-body">
-            <i18n-t tag="p" keypath="webFormsSetting.description">
-              <template #formName>
-                <strong>{{ form.nameOrId }}</strong>
-              </template>
-            </i18n-t>
-            <form id="web-form-settings-form">
-              <div class="radio">
-                <label>
-                  <input v-model="webformsEnabled" name="webformsEnabled" type="radio" :value="false"
-                    @change="confirmationModal.show({ webformsEnabled: false })">
-                  {{ $t('webFormsSetting.enketoDefault') }}
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input v-model="webformsEnabled" name="webformsEnabled" type="radio" :value="true"
-                    @change="confirmationModal.show({ webformsEnabled: true })">
-                  AGR Web Forms
-                </label>
-              </div>
-            </form>
-          </div>
-        </div>
+        <!-- Web forms choice panel hidden - always using Enketo -->
       </div>
       <div class="col-xs-6">
         <div class="panel panel-simple-danger">

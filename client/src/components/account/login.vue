@@ -4,16 +4,7 @@
       <div class="brand-content">
         <div class="brand-logo-wrap">
           <div class="brand-logo">
-            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="20" cy="20" r="18" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-              <circle cx="20" cy="20" r="8" fill="rgba(255,255,255,0.9)"/>
-              <circle cx="20" cy="8" r="3" fill="rgba(255,255,255,0.7)"/>
-              <circle cx="30" cy="26" r="3" fill="rgba(255,255,255,0.7)"/>
-              <circle cx="10" cy="26" r="3" fill="rgba(255,255,255,0.7)"/>
-              <line x1="20" y1="12" x2="20" y2="11" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-              <line x1="27" y1="24" x2="24" y2="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-              <line x1="13" y1="24" x2="16" y2="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-            </svg>
+            <img src="/logo-agr-collect.png" alt="AGR-Collect"/>
           </div>
         </div>
         <h1 class="brand-title">AGR-Collect</h1>
@@ -296,17 +287,14 @@ export default {
       width: 80px;
       height: 80px;
       margin: 0 auto;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      backdrop-filter: blur(12px);
 
-      svg {
-        width: 44px;
-        height: 44px;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
       }
     }
 
@@ -606,7 +594,7 @@ export default {
 
       .brand-features, .brand-footer { display: none; }
       .brand-tagline { margin-bottom: 0; }
-      .brand-logo { width: 56px; height: 56px; border-radius: 16px; svg { width: 30px; height: 30px; } }
+      .brand-logo { width: 56px; height: 56px; }
       .brand-logo-wrap { margin-bottom: 16px; }
       .brand-title { font-size: 24px; margin-bottom: 6px; }
       .brand-tagline { font-size: 13px; }
@@ -626,7 +614,7 @@ export default {
   #account-login {
     .login-brand-panel {
       padding: 28px 20px 24px;
-      .brand-logo { width: 48px; height: 48px; border-radius: 14px; }
+      .brand-logo { width: 48px; height: 48px; }
       .brand-logo-wrap { margin-bottom: 12px; }
       .brand-title { font-size: 20px; }
       .brand-tagline { font-size: 12px; }

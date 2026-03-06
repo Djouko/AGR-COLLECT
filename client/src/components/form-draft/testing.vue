@@ -126,8 +126,8 @@ const hidePopover = () => { popoverData.target = null; };
     }
   },
   "fr": {
-    "title": "Tester cette ébauche",
-    "entitiesTesting": "Cette définition de Formulaire crée ou met à jour des Entités. Pour le moment, les Entités ne sont pas créées ou mises à jour par les Ébauches de Formulaires, vous devez donc publier le formulaire pour vérifier le fonctionnement des Entités.",
+    "title": "Tester ce brouillon",
+    "entitiesTesting": "Cette définition de Formulaire crée ou met à jour des Entités. Pour le moment, les Entités ne sont pas créées ou mises à jour par les Brouillons de Formulaires, vous devez donc publier le formulaire pour vérifier le fonctionnement des Entités.",
     "deletionWarning": {
       "full": "Les soumissions créées ici {willBeDeleted} quand vous publierez le formulaire",
       "willBeDeleted": "sera supprimé"

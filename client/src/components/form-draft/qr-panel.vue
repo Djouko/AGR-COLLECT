@@ -133,7 +133,7 @@ const { projectPath } = useRoutes();
       "full": "Ceci est un {temporaryCode}",
       "temporaryCode": "Code de Test Temporaire"
     },
-    "stopsWorking": "Il cessera de fonctionner quand vous publierez cette ébauche.",
+    "stopsWorking": "Il cessera de fonctionner quand vous publierez ce brouillon.",
     "instructions": "Scannez ce QR code pour configurer Collect sur un appareil pour tester et soumettre des données à cette table de test.",
     "codesForUsers": {
       "full": "Pour créer des codes à distribuer aux utilisateurs, merci de visiter la page {appUsers}.",

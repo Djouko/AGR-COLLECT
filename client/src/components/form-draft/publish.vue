@@ -263,10 +263,10 @@ export default {
     }
   },
   "fr": {
-    "title": "Publier l'ébauche",
+    "title": "Publier le brouillon",
     "warnings": {
       "attachments": {
-        "full": "Vous n'avez pas fourni tous les {formAttachments} requis par votre Formulaire. Vous pouvez ignorer ceci si vous le souhaitez, mais vous devrez créer une nouvelle Ébauche pour fournir ces fichiers plus tard.",
+        "full": "Vous n'avez pas fourni tous les {formAttachments} requis par votre Formulaire. Vous pouvez ignorer ceci si vous le souhaitez, mais vous devrez créer un nouveau Brouillon pour fournir ces fichiers plus tard.",
         "formAttachments": "Fichiers joints de formulaire"
       },
       "testing": {
@@ -275,14 +275,14 @@ export default {
       }
     },
     "introduction": [
-      "Vous êtes sur le point de faire de cette ébauche la publiée de votre formulaire. Cela va finaliser les changements que vous avez apportés à la définition du formulaire et aux fichiers joints.",
-      "Les données existantes pour le formulaire finalisé ne seront pas affectées, mais toutes les données de test de cette ébauche seront supprimées.",
-      "Chaque version de formulaire requiert une nom unique. Actuellement, votre ébauche a le même nom de version qu'une version précédemment publiée. Vous pouvez en définir un nouveau en téléversant une définition de formulaire avec le nom désiré, ou vous pouvez en préciser un nouveau ci-dessous et le serveur le changera pour vous.",
+      "Vous êtes sur le point de faire de ce brouillon la version publiée de votre formulaire. Cela va finaliser les changements que vous avez apportés à la définition du formulaire et aux fichiers joints.",
+      "Les données existantes pour le formulaire finalisé ne seront pas affectées, mais toutes les données de test de ce brouillon seront supprimées.",
+      "Chaque version de formulaire requiert un nom unique. Actuellement, votre brouillon a le même nom de version qu'une version précédemment publiée. Vous pouvez en définir un nouveau en téléversant une définition de formulaire avec le nom désiré, ou vous pouvez en préciser un nouveau ci-dessous et le serveur le changera pour vous.",
       "Voulez vous continuer ?"
     ],
-    "newProperties": "Publier cette ébauche créera {count} propriété. Cela ne peut être annulé. | Publier cette ébauche créera {count} propriétés. Cela ne peut être annulé. | Publier cette ébauche créera {count} propriété(s). Cela ne peut être annulé.",
+    "newProperties": "Publier ce brouillon créera {count} propriété. Cela ne peut être annulé. | Publier ce brouillon créera {count} propriétés. Cela ne peut être annulé. | Publier ce brouillon créera {count} propriété(s). Cela ne peut être annulé.",
     "problem": {
-      "409_6": "Le nom de version de cette ébauche est en conflit avec une version antérieure de ce formulaire ou d’un formulaire supprimé. Merci d'utiliser le champ ci-dessous pour le changer ou téléverser une nouvelle définition de formulaire."
+      "409_6": "Le nom de version de ce brouillon est en conflit avec une version antérieure de ce formulaire ou d'un formulaire supprimé. Merci d'utiliser le champ ci-dessous pour le changer ou téléverser une nouvelle définition de formulaire."
     }
   },
   "id": {

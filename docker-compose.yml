@@ -79,6 +79,8 @@ services:
       - S3_SECRET_KEY=${S3_SECRET_KEY:-}
       - S3_BUCKET_NAME=${S3_BUCKET_NAME:-}
       - SESSION_LIFETIME=${SESSION_LIFETIME:-86400}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@agr-collect.local}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-agrcollect2025}
     command: [ "wait-for-it", "${DB_HOST:-postgres14}:5432", "--", "./start-odk.sh" ]
     restart: always
     logging:

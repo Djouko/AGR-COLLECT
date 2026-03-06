@@ -206,9 +206,9 @@ body:has(#form-edit) { background-color: #fff; }
   },
   "fr": {
     "alert": {
-      "upload": "La nouvelle définition du formulaire a été enregistrée comme ébauche.",
-      "publish": "Votre ébauche est maintenant publiée. Chaque terminal qui reçoit ce formulaires recevra désormais la nouvelle définition et les fichiers joints associés.",
-      "abandon": "La version d'ébauche de ce formulaire a été supprimée avec succès.",
+      "upload": "La nouvelle définition du formulaire a été enregistrée comme brouillon.",
+      "publish": "Votre brouillon est maintenant publié. Chaque terminal qui reçoit ce formulaire recevra désormais la nouvelle définition et les fichiers joints associés.",
+      "abandon": "Le brouillon de ce formulaire a été supprimé avec succès.",
       "delete": "Le formulaire \"{name}\" a été supprimé."
     }
   },

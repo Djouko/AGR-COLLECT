@@ -87,13 +87,7 @@ Gestion complète des sites avec visualisation cartographique
           <div class="stat-label">{{ $t('stats.mediaFiles') }}</div>
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon"><span class="icon-file-text"></span></div>
-        <div class="stat-content">
-          <div class="stat-value">{{ totalSubmissions }}</div>
-          <div class="stat-label">{{ $t('stats.submissions') }}</div>
-        </div>
-      </div>
+      <!-- submission count frame removed per client request -->
     </div>
 
     <div class="view-toggle">
@@ -113,8 +107,61 @@ Gestion complète des sites avec visualisation cartographique
       <p>{{ $t('loading') }}</p>
     </div>
 
-    <div v-else-if="viewMode === 'map'" class="map-section">
-      <div ref="mapContainer" class="sites-map"></div>
+    <div v-else-if="viewMode === 'map'" class="map-section" ref="mapSectionEl">
+      <geojson-map ref="geojsonMap" :data="sitesGeoJson" :sizer="mapSizer"
+        @selection-changed="onMapSelectionChanged" @hit="onMapHit"/>
+      <map-popup v-show="mapSelectedSite != null" ref="sitePopup"
+        :back="mapOverlap != null && mapOverlap.length > 1" @hide="hideMapPopup" @back="backToOverlap">
+        <template #title>
+          <span>{{ mapSelectedSite?.name }}</span>
+        </template>
+        <template #body>
+          <dl v-if="mapSelectedSite">
+            <div>
+              <dt>{{ $t('detail.project') }}</dt>
+              <dd>{{ mapSelectedSite.projectName }}</dd>
+            </div>
+            <div>
+              <dt>{{ $t('detail.status') }}</dt>
+              <dd>
+                <span :class="['status-badge', 'status-' + mapSelectedSite.status]">
+                  {{ $t('status.' + mapSelectedSite.status) }}
+                </span>
+              </dd>
+            </div>
+            <div v-if="mapSelectedSite.placeName || mapSelectedSite.coordinates">
+              <dt>{{ $t('detail.location') }}</dt>
+              <dd>{{ mapSelectedSite.placeName || formatSiteCoords(mapSelectedSite.coordinates) }}</dd>
+            </div>
+            <div v-if="mapSelectedSite.description">
+              <dt>{{ $t('detail.description') }}</dt>
+              <dd>{{ mapSelectedSite.description }}</dd>
+            </div>
+          </dl>
+        </template>
+        <template #footer>
+          <button class="btn btn-primary btn-sm" @click="viewSiteFromMap">
+            <span class="icon-eye"></span> {{ $t('actions.view') }}
+          </button>
+        </template>
+      </map-popup>
+      <map-popup v-show="mapSelectedSite == null && mapOverlapSites != null"
+        @hide="hideMapPopup">
+        <template #title>{{ mapOverlapSites ? mapOverlapSites.length : 0 }} {{ $t('overlap.sitesHere') }}</template>
+        <template #body>
+          <div v-for="os in mapOverlapSites" :key="os.id" class="overlap-item"
+            tabindex="0"
+            @click="onOverlapSelect(os)" @keydown.enter="onOverlapSelect(os)"
+            @mouseenter="onOverlapPreview(os)" @focus="onOverlapPreview(os)"
+            @mouseleave="onOverlapPreview(null)" @blur="onOverlapPreview(null)">
+            <div class="overlap-item-info">
+              <span :class="['legend-dot', os.status]"></span>
+              <span>{{ os.name }}</span>
+            </div>
+            <span class="icon-angle-right"></span>
+          </div>
+        </template>
+      </map-popup>
       <div class="map-legend">
         <div class="legend-item">
           <span class="legend-dot active"></span> {{ $t('status.active') }}
@@ -137,7 +184,6 @@ Gestion complète des sites avec visualisation cartographique
               <th>{{ $t('table.project') }}</th>
               <th>{{ $t('table.location') }}</th>
               <th>{{ $t('table.status') }}</th>
-              <th>{{ $t('table.submissions') }}</th>
               <th>{{ $t('table.lastActivity') }}</th>
               <th>{{ $t('table.actions') }}</th>
             </tr>
@@ -150,8 +196,11 @@ Gestion complète des sites avec visualisation cartographique
               </td>
               <td>{{ site.projectName }}</td>
               <td class="location-cell">
-                <span v-if="site.coordinates">
-                  📍 {{ site.coordinates.lat.toFixed(4) }}, {{ site.coordinates.lng.toFixed(4) }}
+                <span v-if="site.coordinates && site.placeName">
+                  📍 {{ site.placeName }}
+                </span>
+                <span v-else-if="site.coordinates">
+                  📍 {{ formatSiteCoords(site.coordinates) }}
                 </span>
                 <span v-else class="no-location">{{ $t('noLocation') }}</span>
               </td>
@@ -160,7 +209,6 @@ Gestion complète des sites avec visualisation cartographique
                   {{ $t('status.' + site.status) }}
                 </span>
               </td>
-              <td class="text-center">{{ site.submissionsCount || 0 }}</td>
               <td>{{ formatDate(site.lastActivity) }}</td>
               <td class="actions-cell">
                 <button class="btn-icon btn-view" @click.stop="viewSite(site)" :title="$t('actions.view')">
@@ -201,7 +249,7 @@ Gestion complète des sites avec visualisation cartographique
             <p class="site-card-project">{{ getProjectName(site.projectId) }}</p>
             <div class="site-card-meta">
               <span v-if="site.coordinates" class="meta-item location">
-                <span class="icon-map-marker"></span> {{ site.region || formatCoords(site.coordinates) }}
+                <span class="icon-map-marker"></span> {{ site.region || formatSiteCoords(site.coordinates) }}
               </span>
               <span class="meta-item">
                 <span class="icon-file-text"></span> {{ (site.media && site.media.length) || 0 }}
@@ -261,10 +309,12 @@ Gestion complète des sites avec visualisation cartographique
 
           <div class="detail-section" v-if="selectedSite.coordinates">
             <h3><span class="icon-map-marker"></span> {{ $t('detail.location') }}</h3>
-            <div ref="detailMapContainer" class="detail-map"></div>
+            <div class="detail-map-wrapper">
+              <geojson-map :data="detailSiteGeoJson" :sizer="detailMapSizer"/>
+            </div>
             <div class="coordinates-display">
-              <span><strong>Latitude:</strong> {{ selectedSite.coordinates.lat }}</span>
-              <span><strong>Longitude:</strong> {{ selectedSite.coordinates.lng }}</span>
+              <span v-if="selectedSite.placeName"><strong>📍</strong> {{ selectedSite.placeName }}</span>
+              <span v-else>📍 {{ formatSiteCoords(selectedSite.coordinates) }}</span>
             </div>
           </div>
 
@@ -296,21 +346,7 @@ Gestion complète des sites avec visualisation cartographique
             </div>
           </div>
 
-          <div class="detail-section">
-            <h3><span class="icon-file-text"></span> {{ $t('detail.submissions') }} ({{ selectedSite.submissionsCount || 0 }})</h3>
-            <div v-if="selectedSite.submissions && selectedSite.submissions.length > 0" class="submissions-list">
-              <div v-for="sub in selectedSite.submissions.slice(0, 5)" :key="sub.instanceId" class="submission-item">
-                <span class="sub-date">{{ formatDateTime(sub.createdAt) }}</span>
-                <span class="sub-form">{{ sub.formName }}</span>
-                <span :class="['status-badge', 'status-' + sub.reviewState]">
-                  {{ sub.reviewState }}
-                </span>
-              </div>
-            </div>
-            <div v-else class="no-submissions">
-              <p>{{ $t('detail.noSubmissions') }}</p>
-            </div>
-          </div>
+          <!-- Submissions section removed per client request -->
         </div>
       </div>
     </div>
@@ -495,23 +531,20 @@ Gestion complète des sites avec visualisation cartographique
 </template>
 
 <script>
-import { inject, defineAsyncComponent } from 'vue';
+import { defineAsyncComponent } from 'vue';
 import useRequest from '../../composables/request';
 import { apiPaths } from '../../util/request';
-import Map from 'ol/Map';
-import View from 'ol/View';
-import TileLayer from 'ol/layer/Tile';
-import VectorLayer from 'ol/layer/Vector';
-import VectorSource from 'ol/source/Vector';
-import OSM from 'ol/source/OSM';
-import Feature from 'ol/Feature';
-import Point from 'ol/geom/Point';
-import { fromLonLat } from 'ol/proj';
-import { Style, Circle, Fill, Stroke, Text } from 'ol/style';
-import Overlay from 'ol/Overlay';
+import { loadAsync } from '../../util/load-async';
+import MapPopup from '../map/popup.vue';
+import { formatCoords, getCachedPlaceName, reverseGeocode } from '../../util/reverse-geocode';
 
 export default {
   name: 'SitesIndex',
+  
+  components: {
+    GeojsonMap: defineAsyncComponent(loadAsync('GeojsonMap')),
+    MapPopup
+  },
   
   inject: ['container'],
   
@@ -557,9 +590,9 @@ export default {
         address: '',
         status: 'active'
       },
-      map: null,
-      detailMap: null,
-      vectorSource: null,
+      mapSelection: null,
+      mapOverlap: null,
+      mapSelectedFromOverlap: false,
       currentUser: null,
       userRoles: []
     };
@@ -627,18 +660,63 @@ export default {
         willChange: 'transform',
         transformOrigin: 'center center'
       };
-    }
+    },
+    sitesGeoJson() {
+      const features = this.filteredSites
+        .filter(s => s.coordinates)
+        .map(s => ({
+          type: 'Feature',
+          id: String(s.id),
+          geometry: {
+            type: 'Point',
+            coordinates: [s.coordinates.lng, s.coordinates.lat]
+          },
+          properties: {
+            name: s.name,
+            status: s.status,
+            projectName: s.projectName,
+            siteId: s.id
+          }
+        }));
+      if (features.length === 0) return null;
+      return { type: 'FeatureCollection', features };
+    },
+    mapSelectedSite() {
+      if (!this.mapSelection) return null;
+      const id = this.mapSelection.id;
+      return this.sites.find(s => String(s.id) === String(id)) || null;
+    },
+    mapOverlapSites() {
+      if (!this.mapOverlap || this.mapOverlap.length < 2) return null;
+      return this.mapOverlap.map(f => {
+        const id = f.id;
+        return this.sites.find(s => String(s.id) === String(id));
+      }).filter(Boolean);
+    },
+    detailSiteGeoJson() {
+      if (!this.selectedSite?.coordinates) return null;
+      return {
+        type: 'FeatureCollection',
+        features: [{
+          type: 'Feature',
+          id: String(this.selectedSite.id),
+          geometry: {
+            type: 'Point',
+            coordinates: [this.selectedSite.coordinates.lng, this.selectedSite.coordinates.lat]
+          },
+          properties: {
+            name: this.selectedSite.name,
+            status: this.selectedSite.status
+          }
+        }]
+      };
+    },
   },
 
   async mounted() {
     await this.loadCurrentUser();
     await this.loadProjects();
     await this.loadSites();
-    this.$nextTick(() => {
-      if (this.viewMode === 'map') {
-        this.initMap();
-      }
-    });
   },
 
   beforeUnmount() {
@@ -649,16 +727,6 @@ export default {
   },
 
   watch: {
-    viewMode(newMode) {
-      if (newMode === 'map') {
-        this.$nextTick(() => this.initMap());
-      }
-    },
-    selectedSite(site) {
-      if (site && site.coordinates) {
-        this.$nextTick(() => this.initDetailMap());
-      }
-    }
   },
 
   methods: {
@@ -760,10 +828,19 @@ export default {
             lat: parseFloat(site.latitude),
             lng: parseFloat(site.longitude)
           } : null,
+          placeName: null,
           projectName: this.projects.find(p => p.id === site.projectId)?.name || `Projet ${site.projectId}`,
           media: site.media || [],
           submissions: site.submissions || []
         }));
+        
+        // Resolve place names from cache immediately
+        sites.forEach(site => {
+          if (site.coordinates) {
+            const cached = getCachedPlaceName(site.coordinates.lat, site.coordinates.lng);
+            if (cached) site.placeName = cached;
+          }
+        });
         
         if (sites.length === 0) {
           sites = await this.generateDemoSites();
@@ -771,6 +848,9 @@ export default {
         
         this.sites = sites;
         this.filterSites();
+        
+        // Async resolve uncached place names
+        this.resolveAllPlaceNames();
       } catch (e) {
         console.error('Error loading sites from API, falling back to demo:', e);
         this.sites = await this.generateDemoSites();
@@ -868,10 +948,6 @@ export default {
       }
       
       this.filteredSites = result;
-      
-      if (this.map && this.vectorSource) {
-        this.updateMapFeatures();
-      }
     },
 
     onSearchInput() {
@@ -892,142 +968,77 @@ export default {
       this.showSearchDropdown = false;
       this.searchQuery = site.name;
       this.filterSites();
-      this.selectSite(site);
-      
-      if (this.map && site.coordinates) {
-        const coords = fromLonLat([
-          site.coordinates.lng || site.coordinates.longitude,
-          site.coordinates.lat || site.coordinates.latitude
-        ]);
-        this.map.getView().animate({
-          center: coords,
-          zoom: 14,
-          duration: 500
-        });
+      if (this.viewMode === 'map' && this.$refs.geojsonMap) {
+        this.$refs.geojsonMap.selectFeature(String(site.id));
+      } else {
+        this.selectSite(site);
       }
     },
 
-    initMap() {
-      if (!this.$refs.mapContainer) return;
-      
-      this.vectorSource = new VectorSource();
-      
-      const vectorLayer = new VectorLayer({
-        source: this.vectorSource,
-        style: (feature) => this.getSiteStyle(feature)
-      });
-      
-      this.map = new Map({
-        target: this.$refs.mapContainer,
-        layers: [
-          new TileLayer({ source: new OSM() }),
-          vectorLayer
-        ],
-        view: new View({
-          center: fromLonLat([-3.9, 5.3]), // Côte d'Ivoire par défaut
-          zoom: 6
-        })
-      });
-      
-      this.map.on('click', (evt) => {
-        const feature = this.map.forEachFeatureAtPixel(evt.pixel, f => f);
-        if (feature) {
-          const siteId = feature.get('siteId');
-          const site = this.sites.find(s => s.id === siteId);
-          if (site) this.selectSite(site);
-        }
-      });
-      
-      this.map.on('pointermove', (evt) => {
-        const hit = this.map.hasFeatureAtPixel(evt.pixel);
-        this.map.getTargetElement().style.cursor = hit ? 'pointer' : '';
-      });
-      
-      this.updateMapFeatures();
+    mapSizer() {
+      const el = this.$refs.mapSectionEl;
+      if (!el) return 500;
+      const rect = el.getBoundingClientRect();
+      if (rect.height === 0) return 500;
+      return Math.max(500, document.documentElement.clientHeight - rect.top - 20);
     },
 
-    updateMapFeatures() {
-      if (!this.vectorSource) return;
-      
-      this.vectorSource.clear();
-      
-      this.filteredSites.forEach(site => {
-        if (!site.coordinates) return;
-        
-        const feature = new Feature({
-          geometry: new Point(fromLonLat([site.coordinates.lng, site.coordinates.lat])),
-          siteId: site.id,
-          name: site.name,
-          status: site.status
-        });
-        
-        this.vectorSource.addFeature(feature);
-      });
-      
-      if (this.vectorSource.getFeatures().length > 0) {
-        const extent = this.vectorSource.getExtent();
-        this.map.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 12 });
+    onMapSelectionChanged(feature) {
+      this.mapSelection = feature;
+      if (feature != null && !this.mapSelectedFromOverlap) {
+        this.mapOverlap = null;
+      }
+      this.mapSelectedFromOverlap = false;
+    },
+
+    onMapHit(hits) {
+      if (hits.length > 1) {
+        this.mapOverlap = hits;
+      } else if (hits.length <= 1) {
+        this.mapOverlap = null;
       }
     },
 
-    getSiteStyle(feature) {
-      const status = feature.get('status');
-      const colors = {
-        active: '#2e7d32',
-        inactive: '#c62828',
-        pending: '#f57c00'
-      };
-      const color = colors[status] || '#2e7d32';
-      
-      return new Style({
-        image: new Circle({
-          radius: 10,
-          fill: new Fill({ color }),
-          stroke: new Stroke({ color: '#fff', width: 2 })
-        }),
-        text: new Text({
-          text: feature.get('name'),
-          offsetY: -20,
-          font: '12px sans-serif',
-          fill: new Fill({ color: '#111827' }),
-          stroke: new Stroke({ color: '#fff', width: 3 })
-        })
-      });
+    hideMapPopup() {
+      if (this.$refs.geojsonMap) {
+        this.$refs.geojsonMap.selectFeature(null);
+      }
+      this.mapSelection = null;
+      this.mapOverlap = null;
     },
 
-    initDetailMap() {
-      if (!this.$refs.detailMapContainer || !this.selectedSite?.coordinates) return;
-      
-      if (this.detailMap) {
-        this.detailMap.setTarget(null);
+    backToOverlap() {
+      if (this.$refs.geojsonMap) {
+        this.$refs.geojsonMap.selectFeature(null);
       }
-      
-      const coords = this.selectedSite.coordinates;
-      const point = new Feature({
-        geometry: new Point(fromLonLat([coords.lng, coords.lat]))
-      });
-      
-      point.setStyle(new Style({
-        image: new Circle({
-          radius: 12,
-          fill: new Fill({ color: '#2e7d32' }),
-          stroke: new Stroke({ color: '#fff', width: 3 })
-        })
-      }));
-      
-      const vectorSource = new VectorSource({ features: [point] });
-      
-      this.detailMap = new Map({
-        target: this.$refs.detailMapContainer,
-        layers: [
-          new TileLayer({ source: new OSM() }),
-          new VectorLayer({ source: vectorSource })
-        ],
-        view: new View({
-          center: fromLonLat([coords.lng, coords.lat]),
-          zoom: 14
-        })
-      });
+      this.mapSelection = null;
+    },
+
+    onOverlapPreview(site) {
+      if (!this.$refs.geojsonMap) return;
+      if (site != null) {
+        this.$refs.geojsonMap.selectFeature(String(site.id), false);
+      } else {
+        this.$refs.geojsonMap.selectFeature(null, false);
+      }
+    },
+
+    onOverlapSelect(site) {
+      this.mapSelectedFromOverlap = true;
+      if (this.$refs.geojsonMap) {
+        this.$refs.geojsonMap.selectFeature(String(site.id), false);
+      }
+      this.mapSelection = { id: String(site.id), properties: { name: site.name, status: site.status } };
+    },
+
+    viewSiteFromMap() {
+      if (this.mapSelectedSite) {
+        this.selectSite(this.mapSelectedSite);
+      }
+    },
+
+    detailMapSizer() {
+      return 250;
     },
 
     selectSite(site) {
@@ -1246,9 +1257,20 @@ export default {
       return project ? project.name : `Projet ${projectId}`;
     },
 
-    formatCoords(coords) {
+    formatSiteCoords(coords) {
       if (!coords) return '-';
-      return `${coords.lat.toFixed(2)}, ${coords.lng.toFixed(2)}`;
+      return formatCoords(coords.lat, coords.lng);
+    },
+
+    async resolveAllPlaceNames() {
+      for (const site of this.sites) {
+        if (site.coordinates && !site.placeName) {
+          try {
+            const name = await reverseGeocode(site.coordinates.lat, site.coordinates.lng);
+            if (name) site.placeName = name;
+          } catch (_) { /* ignore */ }
+        }
+      }
     },
 
     formatDate(dateStr) {
@@ -1414,6 +1436,9 @@ export default {
       "submissions": "Recent Submissions",
       "noSubmissions": "No submissions yet"
     },
+    "overlap": {
+      "sitesHere": "site(s) at this location"
+    },
     "modal": {
       "createTitle": "Create New Site",
       "editTitle": "Edit Site",
@@ -1513,6 +1538,9 @@ export default {
       "video": "Vidéo",
       "submissions": "Soumissions Récentes",
       "noSubmissions": "Aucune soumission"
+    },
+    "overlap": {
+      "sitesHere": "site(s) à cet emplacement"
     },
     "modal": {
       "createTitle": "Créer un Nouveau Site",
@@ -1783,14 +1811,48 @@ export default {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.map-section { position: relative; }
-
-.sites-map {
-  width: 100%;
-  height: 500px;
+.map-section {
+  position: relative;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #e0e0e0;
+  background: #f3f4f6;
+
+  :deep(.geojson-map) {
+    min-height: 500px;
+  }
+}
+
+.overlap-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 6px;
+  margin-inline: -6px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+
+  .overlap-item-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .icon-angle-right {
+    color: #1c1b1f;
+    flex-shrink: 0;
+    font-size: 20px;
+    padding-right: 3px;
+  }
+
+  &:hover, &:focus-within {
+    background-color: #2e7d32;
+    color: #fff;
+    .icon-angle-right { color: #fff; }
+  }
 }
 
 .map-legend {
@@ -2076,12 +2138,15 @@ export default {
   p { margin: 0; color: #6b7280; line-height: 1.6; }
 }
 
-.detail-map {
+.detail-map-wrapper {
   width: 100%;
-  height: 250px;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid #e0e0e0;
+
+  :deep(.geojson-map) {
+    min-height: 250px;
+  }
 }
 
 .coordinates-display {

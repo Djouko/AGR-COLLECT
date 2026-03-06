@@ -16,9 +16,7 @@
             </button>
           </template>
           <p v-show="deleted" class="purge-description">{{ $t('purgeDescription') }}</p>
-          <odata-data-access :analyze-disabled="hasEncryption || deleted"
-            :analyze-disabled-message="analyzeDisabledMessage"
-            @analyze="analyzeModal.show()"/>
+          <!-- OData data access hidden per client request -->
         </div>
         </template>
       <template #body>

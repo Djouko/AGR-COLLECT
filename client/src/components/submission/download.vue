@@ -488,7 +488,7 @@ $actions-padding-left: $label-icon-max-width + $margin-right-icon;
     "deletedFieldsHelp": "Utilisez cette option si vous avez besoin de champs référencés dans les versions précédentes du formulaire",
     "noSelectMultiple": "Ce formulaire ne contient aucun champ à choix multiples (de type \"select_multiple\").",
     "encryptedForm": "Les formulaires chiffrés ne peuvent être traités de cette manière.",
-    "deletedFieldsDisabledForDraft": "Les ébauches de formulaires ne peuvent être utilisées comme cela.",
+    "deletedFieldsDisabledForDraft": "Les brouillons de formulaires ne peuvent être utilisés comme cela.",
     "introduction": [
       "Pour télécharger ces données, vous devrez fournir votre phrase secrète. Votre phrase secrète sera utilisée uniquement pour déchiffrer vos données pour le téléchargement, après quoi le serveur l'oubliera à nouveau"
     ],

@@ -161,7 +161,7 @@ const viewXml = modalData('FormVersionViewXml');
       "upload": "Téléverser une nouvelle définition de formulaire"
     },
     "withinDef": "Dans cette définition de formulaire",
-    "title": "Version de l'ébauche"
+    "title": "Version du brouillon"
   },
   "it": {
     "subtitle": "Caricati",

@@ -95,12 +95,12 @@ const create = () => {
     }
   },
   "fr": {
-    "title": "Version de l'ébauche",
-    "subtitle": "Pas d'ébauche active pour ce formulaire",
+    "title": "Version du brouillon",
+    "subtitle": "Pas de brouillon actif pour ce formulaire",
     "toMakeChanges": "pour modifier ce Formulaire ou ses fichiers joints",
-    "noEffectUntilPublish": "La version publiée ne sera pas affectée tant que vous n'aurez pas publié votre ébauche.",
+    "noEffectUntilPublish": "La version publiée ne sera pas affectée tant que vous n'aurez pas publié votre brouillon.",
     "action": {
-      "create": "Créer une nouvelle ébauche"
+      "create": "Créer un nouveau brouillon"
     }
   },
   "id": {

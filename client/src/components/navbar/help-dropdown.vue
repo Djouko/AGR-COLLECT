@@ -6,9 +6,6 @@
     </a>
     <ul class="dropdown-menu">
       <li>
-        <doc-link to="central-intro/">{{ $t('common.docs') }}</doc-link>
-      </li>
-      <li>
         <router-link to="/legal/guide">
           <span class="icon-book"></span> {{ $t('guide') }}
         </router-link>
@@ -23,17 +20,11 @@
       <li>
         <router-link to="/legal/contacts">{{ $t('contacts') }}</router-link>
       </li>
-      <li class="divider" role="separator"></li>
-      <li>
-        <a href="/version.txt" target="_blank">{{ $t('common.version') }}</a>
-      </li>
     </ul>
   </li>
 </template>
 
 <script setup>
-import DocLink from '../doc-link.vue';
-
 defineOptions({
   name: 'NavbarHelpDropdown'
 });

@@ -503,7 +503,7 @@ export default {
             [
               "Le chiffrement ne peut pas être désactivé une fois qu'il est activé."
             ],
-            "Les soumissions de test des ébauches de formulaires existantes seront définitivement supprimées."
+            "Les soumissions de test des brouillons de formulaires existants seront définitivement supprimées."
           ],
           {
             "full": "Vous pouvez en apprendre plus à propos du chiffrement en cliquant {here}. Si cela vous semble être utile, cliquez sur Suivant pour continuer.",

@@ -12,16 +12,7 @@
             <span class="navbar-icon-bar"></span>
           </button>
           <router-link to="/" class="navbar-brand">
-            <svg class="navbar-logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="20" cy="20" r="18" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-              <circle cx="20" cy="20" r="8" fill="rgba(255,255,255,0.9)"/>
-              <circle cx="20" cy="8" r="3" fill="rgba(255,255,255,0.7)"/>
-              <circle cx="30" cy="26" r="3" fill="rgba(255,255,255,0.7)"/>
-              <circle cx="10" cy="26" r="3" fill="rgba(255,255,255,0.7)"/>
-              <line x1="20" y1="12" x2="20" y2="11" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-              <line x1="27" y1="24" x2="24" y2="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-              <line x1="13" y1="24" x2="16" y2="22" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-            </svg>
+            <img class="navbar-logo" src="/logo-agr-collect.png" alt="AGR-Collect"/>
             <span>AGR-Collect</span>
           </router-link>
         </div>

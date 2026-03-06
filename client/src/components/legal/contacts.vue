@@ -19,8 +19,8 @@ Page de Contacts
               </div>
               <h4>{{ $t('support.title') }}</h4>
               <p>{{ $t('support.description') }}</p>
-              <a href="mailto:support@agr-collect.local" class="contact-link">
-                support@agr-collect.local
+              <a href="mailto:emmanueljuniordequa2@gmail.com" class="contact-link">
+                emmanueljuniordequa2@gmail.com
               </a>
             </div>
             
@@ -30,7 +30,7 @@ Page de Contacts
               </div>
               <h4>{{ $t('phone.title') }}</h4>
               <p>{{ $t('phone.description') }}</p>
-              <span class="contact-link">+243 XX XXX XXXX</span>
+              <a href="tel:+237690624051" class="contact-link">+237 690 624 051</a>
             </div>
             
             <div class="contact-card">
@@ -41,7 +41,7 @@ Page de Contacts
               <p>{{ $t('address.description') }}</p>
               <span class="contact-link">
                 ONG SAAHDEL<br>
-                Kinshasa, RDC
+                Cameroun
               </span>
             </div>
           </div>
@@ -55,14 +55,11 @@ Page de Contacts
           <div class="social-links">
             <h4>{{ $t('social.title') }}</h4>
             <div class="social-icons">
-              <a href="#" class="social-icon" aria-label="Facebook">
-                <span class="icon-user"></span>
+              <a href="https://www.facebook.com/saahdel" target="_blank" class="social-icon" aria-label="Facebook">
+                <span class="icon-user"></span> Facebook
               </a>
-              <a href="#" class="social-icon" aria-label="Twitter">
-                <span class="icon-comment"></span>
-              </a>
-              <a href="#" class="social-icon" aria-label="LinkedIn">
-                <span class="icon-briefcase"></span>
+              <a href="https://www.saahdel.org" target="_blank" class="social-icon" aria-label="Site web">
+                <span class="icon-globe"></span> www.saahdel.org
               </a>
             </div>
           </div>

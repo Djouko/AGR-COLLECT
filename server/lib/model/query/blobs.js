@@ -106,10 +106,12 @@ const unattachedClause = sql`
   LEFT JOIN submission_attachments AS sa ON sa."blobId" = b.id
   LEFT JOIN form_attachments       AS fa ON fa."blobId" = b.id
   LEFT JOIN form_defs              AS fd ON fd."xlsBlobId" = b.id
+  LEFT JOIN site_media             AS sm ON sm."blobId" = b.id
   WHERE ca."blobId" IS NULL
     AND sa."blobId" IS NULL
     AND fa."blobId" IS NULL
     AND fd."xlsBlobId" IS NULL
+    AND sm."blobId" IS NULL
 `;
 
 const _purgeAllUnattached = () => ({ all }) => all(sql`

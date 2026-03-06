@@ -30,8 +30,10 @@ fi
 SELFSIGN_PATH="/etc/selfsign/live/$DOMAIN"
 if [ "$SSL_TYPE" = "selfsign" ] && [ ! -s "$SELFSIGN_PATH/privkey.pem" ]; then
   mkdir -p "$SELFSIGN_PATH"
+  # Generate self-signed cert valid for localhost, any IP, and any domain
   openssl req -x509 -newkey rsa:4086 \
-    -subj "/C=XX/ST=XXXX/L=XXXX/O=XXXX/CN=localhost" \
+    -subj "/C=XX/ST=XXXX/L=XXXX/O=AGR-Collect/CN=$DOMAIN" \
+    -addext "subjectAltName=DNS:$DOMAIN,DNS:*.ngrok-free.app,DNS:*.ngrok.io,DNS:*.localhost,IP:127.0.0.1,IP:0.0.0.0" \
     -keyout "$SELFSIGN_PATH/privkey.pem" \
     -out "$SELFSIGN_PATH/fullchain.pem" \
     -days 3650 -nodes -sha256

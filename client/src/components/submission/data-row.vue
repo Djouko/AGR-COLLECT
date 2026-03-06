@@ -8,6 +8,9 @@
             :instance-id="submission.__id"
             :attachment-name="getValue(submission, field)" :deleted="deleted"/>
         </template>
+        <template v-else-if="field.type === 'geopoint' && getValue(submission, field) != null">
+          <geopoint-value :value="getValue(submission, field)"/>
+        </template>
         <template v-else-if="needsTooltip(field.type)">
           <span v-tooltip.text>{{ formatValue(submission, field, $i18n) }}</span>
         </template>
@@ -53,6 +56,7 @@ const needsTooltip = (type) => !typesWithoutTooltips.includes(type);
 import { computed } from 'vue';
 
 import SubmissionAttachmentLink from './attachment-link.vue';
+import GeopointValue from './geopoint-value.vue';
 
 import { getValue, formatValue } from '../../util/submission';
 

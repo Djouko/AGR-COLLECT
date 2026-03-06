@@ -2,6 +2,7 @@ import { DateTime, Settings } from 'luxon';
 import { path } from 'ramda';
 
 import { formatDate, formatDateTime, formatTime } from './date-time';
+import { formatGeopoint } from './reverse-geocode';
 
 export const getValue = (submission, field) =>
   path(field.pathElements, submission);
@@ -58,6 +59,9 @@ export const formatValue = (submission, field, i18n) => {
     // failure to the user.
     case 'dateTime':
       return formatDateTime(DateTime.fromISO(rawValue));
+
+    case 'geopoint':
+      return formatGeopoint(rawValue);
 
     default:
       return rawValue;

@@ -78,7 +78,7 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
       .then(getOrNotFound)
       .then((project) => Forms.getByAuthForOpenRosa(project.id, auth, queryOptions.allowArgs('formID')))
       .then((forms) => {
-        const domain = (headers.host === 'nginx' && env.internalDomain) ? env.internalDomain : env.domain;
+        const domain = (headers.host === 'nginx' && env.internalDomain) ? env.internalDomain : `${headers['x-forwarded-proto'] || 'https'}://${headers.host}`;
         return formList({ forms, basePath: path.resolve(originalUrl, '..'), domain });
       })));
 
@@ -297,7 +297,7 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
       const project = await Projects.getById(form.projectId).then(getOrNotFound);
       const options = await getOwnerOnlyOptions(auth, project);
       const attachments = await FormAttachments.getAllByFormDefIdForOpenRosa(form.def.id, options);
-      const domain = (headers.host === 'nginx' && env.internalDomain) ? env.internalDomain : env.domain;
+      const domain = (headers.host === 'nginx' && env.internalDomain) ? env.internalDomain : `${headers['x-forwarded-proto'] || 'https'}://${headers.host}`;
       return formManifest({
         attachments,
         basePath: path.resolve(originalUrl, '..'),

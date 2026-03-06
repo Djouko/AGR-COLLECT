@@ -20,6 +20,11 @@ export SENTRY_TAGS
 echo "running migrations.."
 node ./lib/bin/run-migrations
 
+echo "checking admin user.."
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@agr-collect.local}" \
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-agrcollect2025}" \
+node ./lib/bin/create-admin.js || true
+
 # Logs based on SENTRY_RELEASE and SENTRY_TAGS env variables
 echo "logging server upgrade.."
 node ./lib/bin/log-upgrade

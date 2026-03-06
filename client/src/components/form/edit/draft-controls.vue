@@ -83,8 +83,8 @@ const abandonText = computed(() => (!form.dataExists
   "fr": {
     "action": {
       "delete": "Supprimer le formulaire",
-      "abandon": "Abandonner l'ébauche",
-      "publish": "Publier l'ébauche"
+      "abandon": "Abandonner le brouillon",
+      "publish": "Publier le brouillon"
     },
     "title": "Prêt à publier"
   },

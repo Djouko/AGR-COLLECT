@@ -3,13 +3,7 @@
     <div class="claim-brand-panel">
       <div class="brand-content">
         <div class="brand-logo">
-          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="20" cy="20" r="18" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-            <circle cx="20" cy="20" r="8" fill="rgba(255,255,255,0.9)"/>
-            <circle cx="20" cy="8" r="3" fill="rgba(255,255,255,0.7)"/>
-            <circle cx="30" cy="26" r="3" fill="rgba(255,255,255,0.7)"/>
-            <circle cx="10" cy="26" r="3" fill="rgba(255,255,255,0.7)"/>
-          </svg>
+          <img src="/logo-agr-collect.png" alt="AGR-Collect"/>
         </div>
         <h1>AGR-Collect</h1>
         <p>Plateforme de collecte de données terrain</p>
@@ -157,14 +151,10 @@ export default {
       width: 72px;
       height: 72px;
       margin: 0 auto 24px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 22px;
       display: flex;
       align-items: center;
       justify-content: center;
-      backdrop-filter: blur(12px);
-      svg { width: 40px; height: 40px; }
+      img { width: 100%; height: 100%; object-fit: contain; }
     }
 
     h1 {
@@ -342,7 +332,7 @@ export default {
     .claim-brand-panel {
       flex: none;
       padding: 36px 32px 28px;
-      .brand-logo { width: 52px; height: 52px; border-radius: 16px; margin-bottom: 14px; svg { width: 28px; height: 28px; } }
+      .brand-logo { width: 52px; height: 52px; margin-bottom: 14px; }
       h1 { font-size: 22px; margin-bottom: 4px; }
       p { font-size: 12px; }
     }

@@ -161,7 +161,7 @@ export default {
     },
     "emptyTable": "Il n'y a pas de formulaire à montrer.",
     "alert": {
-      "create": "\"{name}\" a été créé comme ébauche."
+      "create": "\"{name}\" a été créé comme brouillon."
     }
   },
   "id": {

@@ -118,9 +118,7 @@
           
           <div class="report-header-section">
             <div class="report-branding">
-              <div class="brand-logo">
-                <span class="icon-globe"></span>
-              </div>
+              <img src="/logo-agr-collect.png" alt="AGR-Collect" class="report-logo" style="height:48px;margin-right:12px"/>
               <div class="brand-info">
                 <h1>AGR-Collect</h1>
                 <p>Système de collecte de données terrain - SAAHDEL</p>
@@ -140,844 +138,79 @@
               
               <div class="report-meta-grid">
                 <div class="meta-item">
-                  <span class="icon-calendar"></span>
                   <strong>{{ $t('report.generatedOn') }}:</strong> {{ reportDate }}
                 </div>
                 <div class="meta-item" v-if="reportType !== 'global'">
-                  <span class="icon-archive"></span>
                   <strong>{{ $t('report.project') }}:</strong> {{ selectedProjectName }}
                 </div>
                 <div class="meta-item" v-if="reportType === 'form' || (reportType === 'user' && selectedForm)">
-                  <span class="icon-file-text"></span>
                   <strong>{{ $t('report.form') }}:</strong> {{ selectedFormName }}
                 </div>
                 <div class="meta-item" v-if="reportType === 'user'">
-                  <span class="icon-user"></span>
                   <strong>{{ $t('report.user') }}:</strong> {{ selectedUserName }}
                 </div>
                 <div class="meta-item">
-                  <span class="icon-clock-o"></span>
                   <strong>{{ $t('report.period') }}:</strong> {{ periodLabel }}
+                </div>
+                <div class="meta-item">
+                  <strong>Total:</strong> {{ reportData.totalSubmissions }} {{ $t('stats.submissions').toLowerCase() }}
                 </div>
               </div>
             </div>
           </div>
 
-          <template v-if="reportType === 'form'">
-            <section class="report-section form-info-section">
-              <h3 class="section-title">
-                <span class="icon-file-text"></span> {{ $t('formReport.info') }}
-              </h3>
-              <div class="form-info-grid" v-if="reportData.selectedFormInfo">
-                <div class="info-card">
-                  <span class="info-label">{{ $t('formReport.formId') }}</span>
-                  <span class="info-value"><code>{{ reportData.selectedFormInfo.xmlFormId }}</code></span>
-                </div>
-                <div class="info-card">
-                  <span class="info-label">{{ $t('formReport.state') }}</span>
-                  <span :class="['state-badge', 'state-' + reportData.selectedFormInfo.state]">
-                    {{ reportData.selectedFormInfo.state }}
-                  </span>
-                </div>
-                <div class="info-card">
-                  <span class="info-label">{{ $t('formReport.totalSubmissions') }}</span>
-                  <span class="info-value highlight">{{ reportData.totalSubmissions }}</span>
-                </div>
-                <div class="info-card">
-                  <span class="info-label">{{ $t('formReport.collectors') }}</span>
-                  <span class="info-value">{{ reportData.totalAppUsers }}</span>
-                </div>
-              </div>
-            </section>
+          <section class="report-section" v-if="reportData.submissionsWithData && reportData.submissionsWithData.length > 0">
+            <h3 class="section-title">
+              <span class="icon-table"></span> {{ $t('formReport.submissionsData') }}
+              <span class="section-count">({{ reportData.submissionsWithData.length }})</span>
+            </h3>
+            <div class="table-responsive">
+              <table class="report-table data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th v-if="!selectedForm">{{ $t('table.form') }}</th>
+                    <th>{{ $t('formReport.submitter') }}</th>
+                    <th>{{ $t('formReport.date') }}</th>
+                    <th>{{ $t('formReport.status') }}</th>
+                    <th v-for="field in reportData.formFields" :key="field.path">
+                      {{ field.name || field.path.split('/').pop() }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(sub, index) in reportData.submissionsWithData" :key="sub.instanceId">
+                    <td class="text-center">{{ index + 1 }}</td>
+                    <td v-if="!selectedForm">{{ sub.formName || '-' }}</td>
+                    <td class="submitter-cell">{{ sub.submitterName }}</td>
+                    <td>{{ formatDateTime(sub.createdAt) }}</td>
+                    <td>
+                      <span :class="['status-badge', 'status-' + sub.reviewState]">
+                        {{ getStatusLabel(sub.reviewState) }}
+                      </span>
+                    </td>
+                    <td v-for="field in reportData.formFields" :key="field.path" class="data-cell">
+                      <geopoint-value v-if="field.type === 'geopoint' && sub.fieldValues[field.path.split('/').pop()] != null" :value="sub.fieldValues[field.path.split('/').pop()]"/>
+                      <template v-else>{{ formatFieldValue(sub.fieldValues[field.path.split('/').pop()]) }}</template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
 
-            <section class="report-section">
-              <h3 class="section-title">
-                <span class="icon-pie-chart"></span> {{ $t('formReport.statusBreakdown') }}
-              </h3>
-              <div class="stats-grid-4">
-                <div class="stat-card card-green">
-                  <div class="stat-icon"><span class="icon-check"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.statusBreakdown.approved }}</div>
-                    <div class="stat-label">{{ $t('status.approved') }} ({{ reportData.statusBreakdown.approvedPercent }}%)</div>
-                  </div>
-                </div>
-                <div class="stat-card card-orange">
-                  <div class="stat-icon"><span class="icon-clock-o"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.statusBreakdown.pending }}</div>
-                    <div class="stat-label">{{ $t('status.pending') }} ({{ reportData.statusBreakdown.pendingPercent }}%)</div>
-                  </div>
-                </div>
-                <div class="stat-card card-red">
-                  <div class="stat-icon"><span class="icon-times"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.statusBreakdown.rejected }}</div>
-                    <div class="stat-label">{{ $t('status.rejected') }} ({{ reportData.statusBreakdown.rejectedPercent }}%)</div>
-                  </div>
-                </div>
-                <div class="stat-card card-blue">
-                  <div class="stat-icon"><span class="icon-edit"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.statusBreakdown.other }}</div>
-                    <div class="stat-label">{{ $t('status.other') }} ({{ reportData.statusBreakdown.otherPercent }}%)</div>
-                  </div>
-                </div>
-              </div>
-            </section>
+          <section class="report-section" v-if="!reportData.submissionsWithData || reportData.submissionsWithData.length === 0">
+            <div class="alert alert-info" style="text-align:center;padding:24px">
+              <p style="margin:0"><strong>{{ $t('noData.title') }}</strong></p>
+              <p style="margin:4px 0 0">{{ $t('noData.message') }}</p>
+            </div>
+          </section>
 
-            <section class="report-section" v-if="reportData.submissionsWithData && reportData.submissionsWithData.length > 0">
-              <h3 class="section-title">
-                <span class="icon-table"></span> {{ $t('formReport.submissionsData') }}
-                <span class="section-count">({{ reportData.submissionsWithData.length }} soumissions)</span>
-              </h3>
-              <div class="table-responsive">
-                <table class="report-table data-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>{{ $t('formReport.submitter') }}</th>
-                      <th>{{ $t('formReport.date') }}</th>
-                      <th>{{ $t('formReport.status') }}</th>
-                      <th v-for="field in reportData.formFields" :key="field.path">
-                        {{ field.name || field.path.split('/').pop() }}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(sub, index) in reportData.submissionsWithData.slice(0, 50)" :key="sub.instanceId">
-                      <td class="text-center">{{ index + 1 }}</td>
-                      <td class="submitter-cell">
-                        <span class="icon-user"></span> {{ sub.submitterName }}
-                      </td>
-                      <td>{{ formatDateTime(sub.createdAt) }}</td>
-                      <td>
-                        <span :class="['status-badge', 'status-' + sub.reviewState]">
-                          {{ getStatusLabel(sub.reviewState) }}
-                        </span>
-                      </td>
-                      <td v-for="field in reportData.formFields" :key="field.path" class="data-cell">
-                        {{ formatFieldValue(sub.fieldValues[field.path.split('/').pop()]) }}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <p v-if="reportData.submissionsWithData.length > 50" class="table-note">
-                {{ $t('formReport.showingFirst', { count: 50, total: reportData.submissionsWithData.length }) }}
-              </p>
-            </section>
-
-            <section class="report-section insights-section" v-if="reportData.analytics">
-              <h3 class="section-title">
-                <span class="icon-lightbulb-o"></span> {{ $t('analytics.title') }}
-              </h3>
-              <div class="insights-grid">
-                <div class="insight-card insight-performance">
-                  <div class="insight-icon"><span class="icon-tachometer"></span></div>
-                  <div class="insight-content">
-                    <h4>{{ $t('analytics.performance') }}</h4>
-                    <p>{{ $t('analytics.avgPerDay', { count: reportData.analytics.avgSubmissionsPerDay || reportData.avgPerDay || 0 }) }}</p>
-                    <p v-if="reportData.analytics.peakDay">
-                      {{ $t('analytics.peakDay', { date: formatDate(reportData.analytics.peakDay), count: reportData.analytics.peakDayCount }) }}
-                    </p>
-                  </div>
-                </div>
-                <div class="insight-card insight-quality">
-                  <div class="insight-icon"><span class="icon-check-circle"></span></div>
-                  <div class="insight-content">
-                    <h4>{{ $t('analytics.quality') }}</h4>
-                    <p>{{ $t('analytics.approvalRate', { rate: reportData.analytics.approvalRate }) }}</p>
-                    <p v-if="reportData.analytics.rejectionRate > 0">
-                      {{ $t('analytics.rejectionRate', { rate: reportData.analytics.rejectionRate }) }}
-                    </p>
-                  </div>
-                </div>
-                <div class="insight-card insight-source">
-                  <div class="insight-icon"><span class="icon-mobile"></span></div>
-                  <div class="insight-content">
-                    <h4>{{ $t('analytics.sources') }}</h4>
-                    <p>{{ $t('analytics.mobile') }}: {{ reportData.analytics.submissionsBySource.mobile || 0 }}</p>
-                    <p>{{ $t('analytics.web') }}: {{ reportData.analytics.submissionsBySource.web || 0 }}</p>
-                  </div>
-                </div>
-                <div class="insight-card insight-trend" :class="'trend-' + reportData.analytics.trend">
-                  <div class="insight-icon">
-                    <span :class="reportData.analytics.trend === 'up' ? 'icon-arrow-up' : (reportData.analytics.trend === 'down' ? 'icon-arrow-down' : 'icon-minus')"></span>
-                  </div>
-                  <div class="insight-content">
-                    <h4>{{ $t('analytics.trend') }}</h4>
-                    <p :class="'trend-text-' + reportData.analytics.trend">
-                      {{ reportData.analytics.trendPercent > 0 ? '+' : '' }}{{ reportData.analytics.trendPercent }}% {{ $t('analytics.vsLastMonth') }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="report-section" v-if="reportData.collectors && reportData.collectors.length > 0">
-              <h3 class="section-title">
-                <span class="icon-users"></span> {{ $t('formReport.collectorsContribution') }}
-              </h3>
-              <div class="collectors-grid">
-                <div v-for="collector in reportData.collectors" :key="collector.id" class="collector-card">
-                  <div class="collector-avatar">
-                    <span class="icon-user"></span>
-                  </div>
-                  <div class="collector-info">
-                    <strong>{{ collector.displayName }}</strong>
-                    <span class="collector-stats">
-                      {{ collector.submissions }} soumissions ({{ collector.percent }}%)
-                    </span>
-                    <div class="collector-breakdown">
-                      <span class="approved">✓ {{ collector.approved }}</span>
-                      <span class="pending">◷ {{ collector.pending }}</span>
-                      <span class="rejected">✗ {{ collector.rejected }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </template>
-
-          <template v-else-if="reportType === 'user'">
-            <section class="report-section user-profile-section">
-              <h3 class="section-title">
-                <span class="icon-user"></span> {{ $t('userReport.profile') }}
-              </h3>
-              <div class="user-profile-card">
-                <div class="user-avatar-large">
-                  <span class="icon-user"></span>
-                </div>
-                <div class="user-profile-info">
-                  <h4>{{ selectedUserName }}</h4>
-                  <p class="user-role">{{ $t('userReport.fieldAgent') }}</p>
-                  <p class="user-project">
-                    <span class="icon-archive"></span> {{ selectedProjectName }}
-                    <span v-if="selectedFormName" class="user-form-badge">
-                      <span class="icon-file-text"></span> {{ selectedFormName }}
-                    </span>
-                  </p>
-                </div>
-                <div class="user-status-badge">
-                  <span :class="['status-badge', reportData.userInfo && reportData.userInfo.token ? 'status-active' : 'status-revoked']">
-                    {{ reportData.userInfo && reportData.userInfo.token ? $t('collectorStatus.active') : $t('collectorStatus.revoked') }}
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            <section class="report-section">
-              <h3 class="section-title">
-                <span class="icon-dashboard"></span> {{ $t('userReport.keyStats') }}
-              </h3>
-              <div class="stats-grid-4">
-                <div class="stat-card card-blue">
-                  <div class="stat-icon"><span class="icon-inbox"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.totalSubmissions }}</div>
-                    <div class="stat-label">{{ $t('stats.submissions') }}</div>
-                  </div>
-                </div>
-                <div class="stat-card card-green">
-                  <div class="stat-icon"><span class="icon-check"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.statusBreakdown.approved }}</div>
-                    <div class="stat-label">{{ $t('status.approved') }} ({{ reportData.statusBreakdown.approvedPercent }}%)</div>
-                  </div>
-                </div>
-                <div class="stat-card card-orange">
-                  <div class="stat-icon"><span class="icon-clock-o"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.statusBreakdown.pending }}</div>
-                    <div class="stat-label">{{ $t('status.pending') }} ({{ reportData.statusBreakdown.pendingPercent }}%)</div>
-                  </div>
-                </div>
-                <div class="stat-card card-red">
-                  <div class="stat-icon"><span class="icon-times"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.statusBreakdown.rejected }}</div>
-                    <div class="stat-label">{{ $t('status.rejected') }} ({{ reportData.statusBreakdown.rejectedPercent }}%)</div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="report-section" v-if="!selectedForm && reportData.userFormDetails && reportData.userFormDetails.length > 0">
-              <h3 class="section-title">
-                <span class="icon-file-text"></span> {{ $t('userReport.formsContributed') }}
-                <span class="section-count">({{ reportData.userFormDetails.length }} {{ $t('stats.forms').toLowerCase() }})</span>
-              </h3>
-              <div class="table-responsive">
-                <table class="report-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>{{ $t('table.form') }}</th>
-                      <th>{{ $t('collector.submissions') }}</th>
-                      <th>{{ $t('status.approved') }}</th>
-                      <th>{{ $t('status.pending') }}</th>
-                      <th>{{ $t('status.rejected') }}</th>
-                      <th>{{ $t('table.lastActivity') }}</th>
-                      <th>{{ $t('collector.contribution') }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(f, idx) in reportData.userFormDetails" :key="f.xmlFormId">
-                      <td class="text-center">{{ idx + 1 }}</td>
-                      <td><span class="icon-file-text"></span> {{ f.name || f.xmlFormId }}</td>
-                      <td class="text-center"><strong>{{ f.submissions }}</strong></td>
-                      <td class="text-center text-success">{{ f.approved }}</td>
-                      <td class="text-center text-warning">{{ f.pending }}</td>
-                      <td class="text-center" style="color:#c62828">{{ f.rejected }}</td>
-                      <td>{{ formatDate(f.lastSubmission) }}</td>
-                      <td>
-                        <div class="mini-progress">
-                          <div class="mini-progress-fill" :style="{ width: f.percent + '%' }"></div>
-                          <span>{{ f.percent }}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section class="report-section" v-if="reportData.submissionsWithData && reportData.submissionsWithData.length > 0">
-              <h3 class="section-title">
-                <span class="icon-table"></span> {{ $t('userReport.detailedSubmissions') }}
-                <span class="section-count">({{ reportData.submissionsWithData.length }} soumissions)</span>
-              </h3>
-              <div class="table-responsive">
-                <table class="report-table data-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th v-if="!selectedForm">{{ $t('table.form') }}</th>
-                      <th>{{ $t('formReport.date') }}</th>
-                      <th>{{ $t('formReport.status') }}</th>
-                      <th v-for="field in reportData.formFields" :key="field.path">
-                        {{ field.name || field.path.split('/').pop() }}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(sub, index) in reportData.submissionsWithData.slice(0, 50)" :key="sub.instanceId">
-                      <td class="text-center">{{ index + 1 }}</td>
-                      <td v-if="!selectedForm">{{ sub.formName || '-' }}</td>
-                      <td>{{ formatDateTime(sub.createdAt) }}</td>
-                      <td>
-                        <span :class="['status-badge', 'status-' + sub.reviewState]">
-                          {{ getStatusLabel(sub.reviewState) }}
-                        </span>
-                      </td>
-                      <td v-for="field in reportData.formFields" :key="field.path" class="data-cell">
-                        {{ formatFieldValue(sub.fieldValues[field.path.split('/').pop()]) }}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <p v-if="reportData.submissionsWithData.length > 50" class="table-note">
-                {{ $t('formReport.showingFirst', { count: 50, total: reportData.submissionsWithData.length }) }}
-              </p>
-            </section>
-
-            <section class="report-section insights-section" v-if="reportData.analytics">
-              <h3 class="section-title">
-                <span class="icon-lightbulb-o"></span> {{ $t('userReport.performance') }}
-              </h3>
-              <div class="insights-grid">
-                <div class="insight-card insight-performance">
-                  <div class="insight-icon"><span class="icon-tachometer"></span></div>
-                  <div class="insight-content">
-                    <h4>{{ $t('analytics.performance') }}</h4>
-                    <p>{{ $t('analytics.avgPerDay', { count: reportData.analytics.avgSubmissionsPerDay || 0 }) }}</p>
-                    <p v-if="reportData.analytics.peakDay">
-                      {{ $t('analytics.peakDay', { date: formatDate(reportData.analytics.peakDay), count: reportData.analytics.peakDayCount }) }}
-                    </p>
-                  </div>
-                </div>
-                <div class="insight-card insight-quality">
-                  <div class="insight-icon"><span class="icon-check-circle"></span></div>
-                  <div class="insight-content">
-                    <h4>{{ $t('analytics.quality') }}</h4>
-                    <p>{{ $t('analytics.approvalRate', { rate: reportData.analytics.approvalRate }) }}</p>
-                    <p v-if="reportData.analytics.rejectionRate > 0">
-                      {{ $t('analytics.rejectionRate', { rate: reportData.analytics.rejectionRate }) }}
-                    </p>
-                  </div>
-                </div>
-                <div class="insight-card insight-source">
-                  <div class="insight-icon"><span class="icon-mobile"></span></div>
-                  <div class="insight-content">
-                    <h4>{{ $t('analytics.sources') }}</h4>
-                    <p>{{ $t('analytics.mobile') }}: {{ reportData.analytics.submissionsBySource.mobile || 0 }}</p>
-                    <p>{{ $t('analytics.web') }}: {{ reportData.analytics.submissionsBySource.web || 0 }}</p>
-                  </div>
-                </div>
-                <div class="insight-card insight-trend" :class="'trend-' + reportData.analytics.trend">
-                  <div class="insight-icon">
-                    <span :class="reportData.analytics.trend === 'up' ? 'icon-arrow-up' : (reportData.analytics.trend === 'down' ? 'icon-arrow-down' : 'icon-minus')"></span>
-                  </div>
-                  <div class="insight-content">
-                    <h4>{{ $t('analytics.trend') }}</h4>
-                    <p :class="'trend-text-' + reportData.analytics.trend">
-                      {{ reportData.analytics.trendPercent > 0 ? '+' : '' }}{{ reportData.analytics.trendPercent }}% {{ $t('analytics.vsLastMonth') }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="report-section" v-if="reportData.timeline && reportData.timeline.length > 0">
-              <h3 class="section-title">
-                <span class="icon-line-chart"></span> {{ $t('userReport.activityTimeline') }}
-              </h3>
-              <div class="bar-chart-container">
-                <div class="bar-chart">
-                  <div v-for="(bar, i) in reportData.timeline" :key="i" class="bar-wrapper">
-                    <div class="bar-fill" :style="{ height: bar.height + '%' }">
-                      <span class="bar-value">{{ bar.value }}</span>
-                    </div>
-                    <span class="bar-label">{{ bar.label }}</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="report-section">
-              <h3 class="section-title">
-                <span class="icon-clock-o"></span> {{ $t('section.temporal') }}
-              </h3>
-              <div class="temporal-grid">
-                <div class="temporal-card">
-                  <span class="icon-calendar-plus-o"></span>
-                  <div class="temporal-content">
-                    <span class="temporal-label">{{ $t('temporal.firstSubmission') }}</span>
-                    <span class="temporal-value">{{ formatDate(reportData.firstSubmission) }}</span>
-                  </div>
-                </div>
-                <div class="temporal-card">
-                  <span class="icon-calendar-check-o"></span>
-                  <div class="temporal-content">
-                    <span class="temporal-label">{{ $t('temporal.lastSubmission') }}</span>
-                    <span class="temporal-value">{{ formatDate(reportData.lastSubmission) }}</span>
-                  </div>
-                </div>
-                <div class="temporal-card">
-                  <span class="icon-hourglass-half"></span>
-                  <div class="temporal-content">
-                    <span class="temporal-label">{{ $t('temporal.collectionPeriod') }}</span>
-                    <span class="temporal-value">{{ reportData.collectionPeriod || '-' }}</span>
-                  </div>
-                </div>
-                <div class="temporal-card">
-                  <span class="icon-tachometer"></span>
-                  <div class="temporal-content">
-                    <span class="temporal-label">{{ $t('temporal.avgPerDay') }}</span>
-                    <span class="temporal-value">{{ reportData.avgPerDay || '0' }} / jour</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </template>
-
-          <template v-else-if="reportType === 'project'">
-            <section class="report-section">
-              <h3 class="section-title">
-                <span class="icon-dashboard"></span> {{ $t('projectReport.overview') }}
-              </h3>
-              <div class="stats-grid-4">
-                <div class="stat-card card-green">
-                  <div class="stat-icon"><span class="icon-file-text"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.totalForms }}</div>
-                    <div class="stat-label">{{ $t('stats.forms') }}</div>
-                  </div>
-                </div>
-                <div class="stat-card card-orange">
-                  <div class="stat-icon"><span class="icon-inbox"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.totalSubmissions }}</div>
-                    <div class="stat-label">{{ $t('stats.submissions') }}</div>
-                  </div>
-                </div>
-                <div class="stat-card card-purple">
-                  <div class="stat-icon"><span class="icon-users"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.totalAppUsers }}</div>
-                    <div class="stat-label">{{ $t('stats.fieldAgents') }}</div>
-                  </div>
-                </div>
-                <div class="stat-card card-blue">
-                  <div class="stat-icon"><span class="icon-check-circle"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.statusBreakdown.approved }}</div>
-                    <div class="stat-label">{{ $t('status.approved') }}</div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="report-section" v-for="form in reportData.formDetails" :key="form.xmlFormId">
-              <h3 class="section-title form-section-title">
-                <span class="icon-file-text"></span> {{ form.name || form.xmlFormId }}
-                <span :class="['state-badge', 'state-' + form.state]">{{ form.state }}</span>
-                <span class="section-count">({{ form.submissions }} soumissions)</span>
-              </h3>
-              
-              <div class="form-summary-grid">
-                <div class="summary-item">
-                  <span class="summary-label">{{ $t('projectReport.formId') }}</span>
-                  <code>{{ form.xmlFormId }}</code>
-                </div>
-                <div class="summary-item">
-                  <span class="summary-label">{{ $t('projectReport.created') }}</span>
-                  {{ formatDate(form.createdAt) }}
-                </div>
-                <div class="summary-item">
-                  <span class="summary-label">{{ $t('projectReport.lastSubmission') }}</span>
-                  {{ formatDate(form.lastSubmission) }}
-                </div>
-                <div class="summary-item">
-                  <span class="summary-label">{{ $t('projectReport.collectors') }}</span>
-                  {{ form.collectors }} agents
-                </div>
-              </div>
-
-              <div class="table-responsive" v-if="form.submissionsList && form.submissionsList.length > 0">
-                <table class="report-table compact-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>{{ $t('submissions.submitter') }}</th>
-                      <th>{{ $t('submissions.date') }}</th>
-                      <th>{{ $t('submissions.status') }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(sub, idx) in form.submissionsList.slice(0, 10)" :key="sub.instanceId">
-                      <td class="text-center">{{ idx + 1 }}</td>
-                      <td><span class="icon-user"></span> {{ sub.submitterName }}</td>
-                      <td>{{ formatDateTime(sub.createdAt) }}</td>
-                      <td>
-                        <span :class="['status-badge', 'status-' + sub.reviewState]">
-                          {{ getStatusLabel(sub.reviewState) }}
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <p v-if="form.submissionsList.length > 10" class="table-note">
-                  {{ $t('projectReport.showingRecent', { shown: 10, total: form.submissionsList.length }) }}
-                </p>
-              </div>
-              <p v-else class="no-submissions-note">{{ $t('projectReport.noSubmissions') }}</p>
-            </section>
-
-            <section class="report-section" v-if="reportData.collectors && reportData.collectors.length > 0">
-              <h3 class="section-title">
-                <span class="icon-users"></span> {{ $t('section.collectors') }}
-              </h3>
-              <div class="table-responsive">
-                <table class="report-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>{{ $t('collector.name') }}</th>
-                      <th>{{ $t('collector.submissions') }}</th>
-                      <th>{{ $t('status.approved') }}</th>
-                      <th>{{ $t('status.pending') }}</th>
-                      <th>{{ $t('collector.lastActivity') }}</th>
-                      <th>{{ $t('collector.contribution') }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(c, i) in reportData.collectors" :key="c.id">
-                      <td class="text-center">{{ i + 1 }}</td>
-                      <td><span class="icon-user"></span> {{ c.displayName }}</td>
-                      <td class="text-center"><strong>{{ c.submissions }}</strong></td>
-                      <td class="text-center text-success">{{ c.approved }}</td>
-                      <td class="text-center text-warning">{{ c.pending }}</td>
-                      <td>{{ formatDate(c.lastActivity) }}</td>
-                      <td>
-                        <div class="mini-progress">
-                          <div class="mini-progress-fill" :style="{ width: c.percent + '%' }"></div>
-                          <span>{{ c.percent }}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </template>
-
-          <template v-else>
-            <section class="report-section">
-              <h3 class="section-title">
-                <span class="icon-dashboard"></span> {{ $t('section.overview') }}
-              </h3>
-              <div class="stats-grid-4">
-                <div class="stat-card card-blue">
-                  <div class="stat-icon"><span class="icon-archive"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.totalProjects }}</div>
-                    <div class="stat-label">{{ $t('stats.projects') }}</div>
-                  </div>
-                </div>
-                <div class="stat-card card-green">
-                  <div class="stat-icon"><span class="icon-file-text"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.totalForms }}</div>
-                    <div class="stat-label">{{ $t('stats.forms') }}</div>
-                  </div>
-                </div>
-                <div class="stat-card card-orange">
-                  <div class="stat-icon"><span class="icon-inbox"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.totalSubmissions }}</div>
-                    <div class="stat-label">{{ $t('stats.submissions') }}</div>
-                  </div>
-                </div>
-                <div class="stat-card card-purple">
-                  <div class="stat-icon"><span class="icon-users"></span></div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ reportData.totalAppUsers }}</div>
-                    <div class="stat-label">{{ $t('stats.fieldAgents') }}</div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="report-section" v-if="reportData.statusBreakdown">
-              <h3 class="section-title">
-                <span class="icon-pie-chart"></span> {{ $t('section.statusChart') }}
-              </h3>
-              <div class="charts-row">
-                <div class="chart-container pie-chart-container">
-                  <div class="pie-chart">
-                    <div class="pie-segment segment-approved" :style="{ '--percent': reportData.statusBreakdown.approvedPercent }"></div>
-                    <div class="pie-segment segment-pending" :style="{ '--percent': reportData.statusBreakdown.pendingPercent }"></div>
-                    <div class="pie-segment segment-rejected" :style="{ '--percent': reportData.statusBreakdown.rejectedPercent }"></div>
-                    <div class="pie-center">
-                      <span class="pie-total">{{ reportData.totalSubmissions }}</span>
-                      <span class="pie-label">Total</span>
-                    </div>
-                  </div>
-                  <div class="pie-legend">
-                    <div class="legend-item">
-                      <span class="legend-color color-approved"></span>
-                      <span class="legend-label">{{ $t('status.approved') }}</span>
-                      <span class="legend-value">{{ reportData.statusBreakdown.approved }} ({{ reportData.statusBreakdown.approvedPercent }}%)</span>
-                    </div>
-                    <div class="legend-item">
-                      <span class="legend-color color-pending"></span>
-                      <span class="legend-label">{{ $t('status.pending') }}</span>
-                      <span class="legend-value">{{ reportData.statusBreakdown.pending }} ({{ reportData.statusBreakdown.pendingPercent }}%)</span>
-                    </div>
-                    <div class="legend-item">
-                      <span class="legend-color color-rejected"></span>
-                      <span class="legend-label">{{ $t('status.rejected') }}</span>
-                      <span class="legend-value">{{ reportData.statusBreakdown.rejected }} ({{ reportData.statusBreakdown.rejectedPercent }}%)</span>
-                    </div>
-                    <div class="legend-item">
-                      <span class="legend-color color-other"></span>
-                      <span class="legend-label">{{ $t('status.other') }}</span>
-                      <span class="legend-value">{{ reportData.statusBreakdown.other }} ({{ reportData.statusBreakdown.otherPercent }}%)</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="report-section" v-if="reportData.timeline && reportData.timeline.length > 0">
-              <h3 class="section-title">
-                <span class="icon-line-chart"></span> {{ $t('section.timeline') }}
-              </h3>
-              <div class="bar-chart-container">
-                <div class="bar-chart">
-                  <div v-for="(bar, i) in reportData.timeline" :key="i" class="bar-wrapper">
-                    <div class="bar-fill" :style="{ height: bar.height + '%' }">
-                      <span class="bar-value">{{ bar.value }}</span>
-                    </div>
-                    <span class="bar-label">{{ bar.label }}</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="report-section">
-              <h3 class="section-title">
-                <span class="icon-list"></span> {{ $t('section.projectsTable') }}
-              </h3>
-              <div class="table-responsive">
-                <table class="report-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>{{ $t('table.project') }}</th>
-                      <th>{{ $t('table.forms') }}</th>
-                      <th>{{ $t('table.submissions') }}</th>
-                      <th>{{ $t('table.agents') }}</th>
-                      <th>{{ $t('table.lastActivity') }}</th>
-                      <th>{{ $t('table.status') }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(project, index) in reportData.projects" :key="project.id">
-                      <td class="text-center">{{ index + 1 }}</td>
-                      <td class="project-name">
-                        <span class="icon-folder-open"></span>
-                        {{ project.name }}
-                      </td>
-                      <td class="text-center">{{ project.forms }}</td>
-                      <td class="text-center"><strong>{{ project.submissions }}</strong></td>
-                      <td class="text-center">{{ project.appUsers || 0 }}</td>
-                      <td>{{ formatDate(project.lastSubmission) }}</td>
-                      <td>
-                        <span :class="['status-badge', project.submissions > 0 ? 'status-active' : 'status-inactive']">
-                          {{ project.submissions > 0 ? $t('projectStatus.active') : $t('projectStatus.empty') }}
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                  <tfoot>
-                    <tr class="total-row">
-                      <td colspan="2"><strong>{{ $t('table.total') }}</strong></td>
-                      <td class="text-center"><strong>{{ reportData.totalForms }}</strong></td>
-                      <td class="text-center"><strong>{{ reportData.totalSubmissions }}</strong></td>
-                      <td class="text-center"><strong>{{ reportData.totalAppUsers }}</strong></td>
-                      <td colspan="2">-</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </section>
-
-            <section class="report-section" v-if="reportData.formDetails && reportData.formDetails.length > 0">
-              <h3 class="section-title">
-                <span class="icon-file-text"></span> {{ $t('section.formDetails') }}
-              </h3>
-              <div class="form-cards-grid">
-                <div v-for="form in reportData.formDetails" :key="form.xmlFormId" class="form-detail-card">
-                  <div class="form-card-header">
-                    <h4>{{ form.name || form.xmlFormId }}</h4>
-                    <span :class="['state-badge', 'state-' + form.state]">{{ form.state }}</span>
-                  </div>
-                  <div class="form-card-body">
-                    <div class="form-stat">
-                      <span class="form-stat-value">{{ form.submissions }}</span>
-                      <span class="form-stat-label">{{ $t('stats.submissions') }}</span>
-                    </div>
-                    <div class="form-stat">
-                      <span class="form-stat-value">{{ form.collectors || 0 }}</span>
-                      <span class="form-stat-label">{{ $t('stats.collectors') }}</span>
-                    </div>
-                    <div class="form-stat">
-                      <span class="form-stat-value">{{ formatShortDate(form.lastSubmission) }}</span>
-                      <span class="form-stat-label">{{ $t('table.lastActivity') }}</span>
-                    </div>
-                  </div>
-                  <div class="form-progress">
-                    <div class="progress-bar">
-                      <div class="progress-fill" :style="{ width: form.percent + '%' }"></div>
-                    </div>
-                    <span class="progress-text">{{ form.percent }}% du total</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="report-section" v-if="reportData.collectors && reportData.collectors.length > 0">
-              <h3 class="section-title">
-                <span class="icon-users"></span> {{ $t('section.collectors') }}
-              </h3>
-              <div class="table-responsive">
-                <table class="report-table collectors-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>{{ $t('collector.name') }}</th>
-                      <th>{{ $t('collector.project') }}</th>
-                      <th>{{ $t('collector.submissions') }}</th>
-                      <th>{{ $t('collector.lastActivity') }}</th>
-                      <th>{{ $t('collector.status') }}</th>
-                      <th>{{ $t('collector.contribution') }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(collector, index) in reportData.collectors" :key="collector.id">
-                      <td class="text-center">{{ index + 1 }}</td>
-                      <td class="collector-name">
-                        <span class="icon-user"></span>
-                        {{ collector.displayName }}
-                      </td>
-                      <td>{{ collector.projectName }}</td>
-                      <td class="text-center"><strong>{{ collector.submissions || 0 }}</strong></td>
-                      <td>{{ formatDate(collector.lastActivity) }}</td>
-                      <td>
-                        <span :class="['status-badge', collector.token ? 'status-active' : 'status-revoked']">
-                          {{ collector.token ? $t('collectorStatus.active') : $t('collectorStatus.revoked') }}
-                        </span>
-                      </td>
-                      <td>
-                        <div class="mini-progress">
-                          <div class="mini-progress-fill" :style="{ width: collector.percent + '%' }"></div>
-                          <span>{{ collector.percent }}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section class="report-section">
-              <h3 class="section-title">
-                <span class="icon-clock-o"></span> {{ $t('section.temporal') }}
-              </h3>
-              <div class="temporal-grid">
-                <div class="temporal-card">
-                  <span class="icon-calendar-plus-o"></span>
-                  <div class="temporal-content">
-                    <span class="temporal-label">{{ $t('temporal.firstSubmission') }}</span>
-                    <span class="temporal-value">{{ formatDate(reportData.firstSubmission) }}</span>
-                  </div>
-                </div>
-                <div class="temporal-card">
-                  <span class="icon-calendar-check-o"></span>
-                  <div class="temporal-content">
-                    <span class="temporal-label">{{ $t('temporal.lastSubmission') }}</span>
-                    <span class="temporal-value">{{ formatDate(reportData.lastSubmission) }}</span>
-                  </div>
-                </div>
-                <div class="temporal-card">
-                  <span class="icon-hourglass-half"></span>
-                  <div class="temporal-content">
-                    <span class="temporal-label">{{ $t('temporal.collectionPeriod') }}</span>
-                    <span class="temporal-value">{{ reportData.collectionPeriod || '-' }}</span>
-                  </div>
-                </div>
-                <div class="temporal-card">
-                  <span class="icon-tachometer"></span>
-                  <div class="temporal-content">
-                    <span class="temporal-label">{{ $t('temporal.avgPerDay') }}</span>
-                    <span class="temporal-value">{{ reportData.avgPerDay || '0' }} / jour</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </template>
-
+          <!-- OLD SECTIONS REMOVED: data-only reports per client request -->
+          <!-- FOOTER FOLLOWS -->
           <div class="report-footer-section">
-            <div class="footer-line"></div>
             <p class="footer-generated">{{ $t('report.footer', { date: reportDate }) }}</p>
-            <p class="footer-brand">
-              <span class="icon-globe"></span>
-              AGR-Collect - Système de collecte de données terrain pour SAAHDEL
-            </p>
+            <p class="footer-brand">AGR-Collect - Système de collecte de données terrain pour SAAHDEL</p>
             <p class="footer-note">{{ $t('report.confidential') }}</p>
           </div>
         </div>
@@ -1007,6 +240,8 @@
   </div>
 </template>
 
+
+
 <script>
 import Loading from '../loading.vue';
 import PageBody from '../page/body.vue';
@@ -1017,10 +252,12 @@ import useRequest from '../../composables/request';
 import useProjects from '../../request-data/projects';
 import { useRequestData } from '../../request-data';
 import { noop } from '../../util/util';
+import { formatGeopoint, formatCoords, getCachedPlaceName } from '../../util/reverse-geocode';
+import GeopointValue from '../submission/geopoint-value.vue';
 
 export default {
   name: 'ReportsIndex',
-  components: { Loading, PageBody, PageHead, Spinner },
+  components: { Loading, PageBody, PageHead, Spinner, GeopointValue },
   setup() {
     const { request } = useRequest();
     const projects = useProjects();
@@ -1379,18 +616,20 @@ export default {
               }
             }
 
-            if (this.reportType === 'user' && !this.selectedForm && formSubmissions.length > 0) {
-              formSubmissions.forEach(sub => {
-                data.submissionsWithData.push({
-                  instanceId: sub.instanceId,
-                  submitterName: this.getSubmitterName(sub, webUsersCache),
-                  submitterType: this.getSubmitterType(sub),
-                  createdAt: sub.createdAt,
-                  reviewState: sub.reviewState || 'received',
-                  formName: form.name || form.xmlFormId,
-                  fieldValues: {}
+            if ((this.reportType === 'user' && !this.selectedForm) || this.reportType === 'project' || this.reportType === 'global') {
+              if (formSubmissions.length > 0) {
+                formSubmissions.forEach(sub => {
+                  data.submissionsWithData.push({
+                    instanceId: sub.instanceId,
+                    submitterName: this.getSubmitterName(sub, webUsersCache),
+                    submitterType: this.getSubmitterType(sub),
+                    createdAt: sub.createdAt,
+                    reviewState: sub.reviewState || 'received',
+                    formName: form.name || form.xmlFormId,
+                    fieldValues: {}
+                  });
                 });
-              });
+              }
             }
 
             formSubmissions.forEach(sub => {
@@ -1671,14 +910,18 @@ export default {
       }
       
       if (typeof value === 'object') {
+        if (value.type === 'Point' && Array.isArray(value.coordinates) && value.coordinates.length >= 2) {
+          return `📍 ${formatGeopoint(value)}`;
+        }
         if (value.coordinates) {
           const coords = value.coordinates;
           if (Array.isArray(coords) && coords.length >= 2) {
-            return `📍 ${coords[1].toFixed(4)}, ${coords[0].toFixed(4)}`;
+            return `📍 ${formatCoords(coords[1], coords[0])}`;
           }
         }
         if (value.latitude && value.longitude) {
-          return `📍 ${value.latitude.toFixed(4)}, ${value.longitude.toFixed(4)}`;
+          const cached = getCachedPlaceName(value.latitude, value.longitude);
+          return `📍 ${cached || formatCoords(value.latitude, value.longitude)}`;
         }
         try {
           const str = JSON.stringify(value);
@@ -1752,260 +995,39 @@ export default {
           <meta charset="UTF-8">
           <style>
             * { box-sizing: border-box; margin: 0; padding: 0; }
-            body {
-              font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-              padding: 24px;
-              color: #111827;
-              line-height: 1.5;
-              background: white;
-            }
-
-            /* Header */
-            .report-header-section {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
-              border-bottom: 1px solid #e5e7eb;
-              padding-bottom: 20px;
-              margin-bottom: 24px;
-            }
-            .report-branding { display: flex; align-items: center; gap: 12px; }
-            .brand-logo {
-              width: 44px; height: 44px;
-              background: #2e7d32;
-              border-radius: 8px;
-              display: flex; align-items: center; justify-content: center;
-              color: white; font-size: 20px;
-            }
-            .brand-info h1 { color: #111827; font-size: 20px; font-weight: 700; margin: 0; }
-            .brand-info p { color: #6b7280; font-size: 12px; }
-            .report-info h2 { color: #111827; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-            .report-meta-grid { display: flex; flex-wrap: wrap; gap: 12px; }
-            .meta-item { font-size: 12px; color: #6b7280; display: flex; align-items: center; gap: 4px; }
+            body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; padding: 20px; color: #111827; line-height: 1.4; background: white; }
+            .report-header-section { border-bottom: 2px solid #2e7d32; padding-bottom: 16px; margin-bottom: 20px; }
+            .report-branding { display: flex; align-items: center; margin-bottom: 12px; }
+            .report-logo { height: 40px; margin-right: 12px; }
+            .brand-info h1 { color: #2e7d32; font-size: 18px; font-weight: 700; margin: 0; }
+            .brand-info p { color: #6b7280; font-size: 11px; margin: 0; }
+            .report-info h2 { color: #111827; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+            .report-meta-grid { display: flex; flex-wrap: wrap; gap: 16px; }
+            .meta-item { font-size: 11px; color: #6b7280; }
             .meta-item strong { color: #374151; }
-
-            /* Sections */
-            .report-section { margin-bottom: 28px; page-break-inside: avoid; }
-            .section-title {
-              color: #111827; font-size: 14px; font-weight: 600;
-              border-bottom: 1px solid #e5e7eb;
-              padding-bottom: 8px; margin-bottom: 16px;
-              display: flex; align-items: center; gap: 8px;
-            }
-
-            /* Stats Grid */
-            .stats-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-            .stat-card {
-              background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 14px;
-              display: flex; align-items: center; gap: 10px;
-            }
-            .stat-icon { font-size: 20px; color: #6b7280; }
-            .stat-value { font-size: 22px; font-weight: 700; color: #111827; }
-            .stat-label { font-size: 10px; color: #6b7280; text-transform: uppercase; }
-            .card-blue .stat-icon { color: #2e7d32; }
-            .card-green .stat-icon { color: #4caf50; }
-            .card-orange .stat-icon { color: #e65100; }
-            .card-purple .stat-icon { color: #7b1fa2; }
-            .card-red .stat-icon { color: #c62828; }
-
-            /* User Profile Card */
-            .user-profile-card {
-              display: flex; align-items: center; gap: 14px;
-              background: #f9fafb; border: 1px solid #e5e7eb;
-              padding: 16px; border-radius: 8px; margin-bottom: 16px;
-            }
-            .user-avatar-large {
-              width: 48px; height: 48px;
-              background: #2e7d32;
-              border-radius: 8px; display: flex; align-items: center; justify-content: center;
-              flex-shrink: 0;
-            }
-            .user-avatar-large span { color: white; font-size: 22px; }
-            .user-profile-info { flex: 1; }
-            .user-profile-info h4 { margin: 0 0 3px; font-size: 16px; font-weight: 600; color: #111827; }
-            .user-profile-info .user-role { color: #2e7d32; font-weight: 600; margin: 0 0 3px; font-size: 12px; }
-            .user-profile-info .user-project { color: #6b7280; font-size: 12px; margin: 0; display: flex; align-items: center; gap: 4px; }
-            .user-form-badge { background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-size: 10px; color: #374151; margin-left: 6px; }
-            .user-status-badge { flex-shrink: 0; }
-
-            /* Tables */
-            .table-responsive { overflow-x: auto; }
-            .report-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px; }
-            .report-table th, .report-table td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
-            .report-table th { background: #f9fafb; color: #374151; font-weight: 600; font-size: 11px; text-transform: uppercase; }
-            .report-table tr:last-child td { border-bottom: none; }
-            .report-table .total-row { background: #f3f4f6 !important; font-weight: 600; }
+            .report-section { margin-bottom: 20px; }
+            .section-title { color: #111827; font-size: 13px; font-weight: 600; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px; }
+            .section-count { font-size: 11px; font-weight: normal; color: #9ca3af; margin-left: 6px; }
+            .table-responsive { overflow-x: visible; }
+            .report-table, .data-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+            .report-table th, .data-table th { background: #f3f4f6; color: #374151; font-weight: 600; font-size: 9px; text-transform: uppercase; padding: 6px 5px; border: 1px solid #d1d5db; text-align: left; }
+            .report-table td, .data-table td { padding: 5px; border: 1px solid #e5e7eb; vertical-align: top; }
+            .report-table tr:nth-child(even) td, .data-table tr:nth-child(even) td { background: #f9fafb; }
             .text-center { text-align: center; }
-
-            /* Status Badges */
-            .status-badge, .state-badge {
-              display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 10px; font-weight: 500;
-            }
-            .status-active, .state-open { background: #e8f5e9; color: #2e7d32; }
-            .status-inactive, .status-revoked { background: #fef2f2; color: #dc2626; }
-            .state-closing { background: #fffbeb; color: #d97706; }
-            .state-closed { background: #f3f4f6; color: #6b7280; }
-
-            /* Charts */
-            .charts-row { display: flex; gap: 24px; align-items: flex-start; }
-            .pie-chart-container { display: flex; gap: 24px; align-items: center; }
-            .pie-legend { display: flex; flex-direction: column; gap: 6px; }
-            .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
-            .legend-color { width: 10px; height: 10px; border-radius: 2px; }
-            .color-approved { background: #4caf50; }
-            .color-pending { background: #ff9800; }
-            .color-rejected { background: #ef4444; }
-            .color-other { background: #9ca3af; }
-
-            /* Bar Chart */
-            .bar-chart-container { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; }
-            .bar-chart { display: flex; align-items: flex-end; justify-content: space-around; height: 160px; border-bottom: 1px solid #d1d5db; }
-            .bar-wrapper { display: flex; flex-direction: column; align-items: center; width: 50px; }
-            .bar-fill {
-              background: #2e7d32;
-              width: 32px; border-radius: 3px 3px 0 0; min-height: 4px;
-              display: flex; align-items: flex-start; justify-content: center;
-            }
-            .bar-value { color: white; font-size: 10px; font-weight: 600; padding-top: 4px; }
-            .bar-label { font-size: 10px; color: #6b7280; margin-top: 6px; }
-
-            /* Form Cards */
-            .form-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-            .form-detail-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 14px; }
-            .form-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-            .form-card-header h4 { font-size: 13px; font-weight: 600; margin: 0; color: #111827; }
-            .form-card-body { display: flex; justify-content: space-around; margin-bottom: 10px; padding: 10px 0; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; }
-            .form-stat { text-align: center; }
-            .form-stat-value { display: block; font-size: 16px; font-weight: 700; color: #111827; }
-            .form-stat-label { font-size: 9px; color: #6b7280; text-transform: uppercase; }
-            .progress-bar { height: 5px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
-            .progress-fill { height: 100%; background: #2e7d32; border-radius: 3px; }
-            .progress-text { font-size: 10px; color: #6b7280; margin-top: 3px; }
-
-            /* Temporal Grid */
-            .temporal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-            .temporal-card {
-              display: flex; align-items: center; gap: 10px;
-              background: #f9fafb; border: 1px solid #e5e7eb;
-              border-radius: 6px; padding: 12px;
-            }
-            .temporal-card > span:first-child { font-size: 18px; color: #2e7d32; }
-            .temporal-label { font-size: 10px; color: #6b7280; text-transform: uppercase; }
-            .temporal-value { font-size: 14px; font-weight: 600; color: #111827; }
-
-            /* Mini Progress */
-            .mini-progress {
-              position: relative; height: 16px; background: #e5e7eb;
-              border-radius: 3px; overflow: hidden; min-width: 60px;
-            }
-            .mini-progress-fill {
-              position: absolute; top: 0; left: 0; height: 100%;
-              background: #2e7d32; border-radius: 3px;
-            }
-            .mini-progress span {
-              position: absolute; top: 50%; left: 50%;
-              transform: translate(-50%, -50%); font-size: 9px; font-weight: 600;
-            }
-
-            /* Submissions Table */
-            .submissions-table { font-size: 11px; }
-            .submissions-table .instance-id code {
-              background: #f3f4f6; padding: 1px 4px; border-radius: 3px; font-size: 10px;
-            }
-            .submitter-name, .submitter-cell { display: flex; align-items: center; gap: 5px; }
-            .section-count { font-size: 11px; font-weight: normal; color: #9ca3af; margin-left: 8px; }
-            .table-note { margin-top: 8px; font-size: 10px; color: #9ca3af; font-style: italic; text-align: center; }
-
-            /* Status Badges for Submissions */
+            .submitter-cell { min-width: 80px; }
+            .data-cell { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .status-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 500; }
             .status-approved { background: #e8f5e9; color: #2e7d32; }
-            .status-received, .status-pending { background: #fffbeb; color: #d97706; }
+            .status-received, .status-pending, .status-null { background: #fffbeb; color: #d97706; }
             .status-rejected, .status-hasIssues { background: #fef2f2; color: #dc2626; }
             .status-edited { background: #f0fdf4; color: #2e7d32; }
-
-            /* Form Info Grid */
-            .form-info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-            .form-info-grid .info-card {
-              background: #f9fafb; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb;
-            }
-            .info-label { display: block; font-size: 10px; color: #6b7280; text-transform: uppercase; margin-bottom: 4px; }
-            .info-value { font-size: 14px; font-weight: 600; color: #111827; }
-            .info-value.highlight { color: #2e7d32; font-size: 18px; }
-            .info-value code { background: #f3f4f6; padding: 2px 5px; border-radius: 3px; font-size: 11px; }
-
-            /* Collectors Grid */
-            .collectors-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-            .collector-card {
-              display: flex; align-items: center; gap: 10px;
-              background: #f9fafb; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb;
-            }
-            .collector-avatar {
-              width: 36px; height: 36px; background: #2e7d32;
-              border-radius: 6px; display: flex; align-items: center; justify-content: center;
-            }
-            .collector-avatar span { color: white; font-size: 16px; }
-            .collector-info strong { display: block; font-size: 13px; color: #111827; margin-bottom: 2px; }
-            .collector-stats { display: block; font-size: 11px; color: #6b7280; margin-bottom: 3px; }
-            .collector-breakdown { display: flex; gap: 8px; font-size: 10px; }
-            .collector-breakdown .approved { color: #2e7d32; }
-            .collector-breakdown .pending { color: #d97706; }
-            .collector-breakdown .rejected { color: #dc2626; }
-
-            /* Form Summary Grid */
-            .form-summary-grid {
-              display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-              margin-bottom: 12px; padding: 10px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;
-            }
-            .summary-item .summary-label { display: block; font-size: 9px; color: #6b7280; text-transform: uppercase; margin-bottom: 2px; }
-            .summary-item code { background: #f3f4f6; padding: 1px 4px; border-radius: 2px; font-size: 10px; }
-            .form-section-title { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-            .compact-table { font-size: 11px; }
-            .compact-table th, .compact-table td { padding: 5px 8px; }
-            .no-submissions-note { padding: 12px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 4px; color: #92400e; font-size: 12px; text-align: center; }
-            .text-success { color: #2e7d32; }
-            .text-warning { color: #d97706; }
-
-            /* Data Table */
-            .data-table { font-size: 10px; width: 100%; border-collapse: collapse; }
-            .data-table th { background: #f9fafb; font-weight: 600; text-transform: uppercase; color: #6b7280; font-size: 9px; }
-            .data-table th, .data-table td { padding: 5px 4px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
-            .submitter-cell { min-width: 100px; }
-            .data-cell { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-            /* Insights */
-            .insights-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-            .insight-card {
-              background: #f9fafb; border: 1px solid #e5e7eb;
-              border-radius: 6px; padding: 12px;
-            }
-            .insight-icon { font-size: 18px; color: #2e7d32; margin-bottom: 6px; }
-            .insight-content h4 { margin: 0 0 4px; font-size: 11px; font-weight: 600; color: #374151; text-transform: uppercase; }
-            .insight-content p { margin: 2px 0; font-size: 11px; color: #6b7280; }
-            .insight-source .insight-icon { color: #7b1fa2; }
-            .insight-trend .insight-icon { color: #d97706; }
-            .trend-up .insight-icon { color: #2e7d32; }
-            .trend-down .insight-icon { color: #dc2626; }
-            .trend-text-up { color: #2e7d32; font-weight: 600; }
-            .trend-text-down { color: #dc2626; font-weight: 600; }
-            .trend-text-stable { color: #6b7280; }
-
-            /* Footer */
-            .report-footer-section {
-              margin-top: 30px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center;
-            }
-            .footer-line { display: none; }
-            .footer-generated { color: #9ca3af; font-size: 11px; margin-bottom: 3px; }
-            .footer-brand { color: #374151; font-size: 12px; font-weight: 500; margin-bottom: 3px; }
-            .footer-note { color: #9ca3af; font-size: 10px; }
-
+            .report-footer-section { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e5e7eb; text-align: center; }
+            .footer-generated { color: #9ca3af; font-size: 10px; margin-bottom: 2px; }
+            .footer-brand { color: #374151; font-size: 11px; font-weight: 500; margin-bottom: 2px; }
+            .footer-note { color: #9ca3af; font-size: 9px; }
+            .alert { display: none; }
             [class*="icon-"] { font-family: inherit; }
-
-            @media print {
-              body { padding: 12px; }
-              .stats-grid-4 { grid-template-columns: repeat(4, 1fr); }
-              .form-cards-grid { grid-template-columns: repeat(2, 1fr); }
-              .temporal-grid { grid-template-columns: repeat(2, 1fr); }
-              .report-section { page-break-inside: avoid; }
-            }
+            @media print { body { padding: 10px; } .report-section { page-break-inside: avoid; } }
           </style>
         </head>
         <body>

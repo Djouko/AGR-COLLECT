@@ -481,7 +481,7 @@ export default {
     "introduction": [
       {
         "create": "Pour créer un formulaire, téléversez un fichier XML XForms ou un fichier excel XLSForm",
-        "update": "Pour modifier l'ébauche, téléversez un fichier XML XForms ou un fichier Excel XLSForm"
+        "update": "Pour modifier le brouillon, téléversez un fichier XML XForms ou un fichier Excel XLSForm"
       },
       {
         "full": "Si vous n'en avez as déjà un, il y a des {tools} pour vous aider à concevoir votre formulaire.",
@@ -517,7 +517,7 @@ export default {
       "Merci de corriger le problème et d'essayer à nouveau.",
       {
         "create": "Si vous êtes sûr que ces problèmes peuvent être ignorés, cliquez le bouton pour créer le formulaire malgré tout :",
-        "update": "Si vous êtes sûr que ces problèmes peuvent être ignorés, cliquez le bouton pour mettre à jour l'ébauche malgré tout :"
+        "update": "Si vous êtes sûr que ces problèmes peuvent être ignorés, cliquez le bouton pour mettre à jour le brouillon malgré tout :"
       }
     ]
   },

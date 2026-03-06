@@ -227,7 +227,7 @@ export default {
       }
     },
     "formNav": {
-      "tabTitle": "Publier cette Ébauche de Formulaire pour activer ces fonctions"
+      "tabTitle": "Publier ce Brouillon de Formulaire pour activer ces fonctions"
     },
     "infoNav": {
       "entityLists": "{count} Liste d'Entité liée | {count} Listes d'Entité liées | {count} Liste(s) d'Entité liée(s)",

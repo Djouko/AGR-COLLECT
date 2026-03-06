@@ -100,10 +100,10 @@
         "delete": "@:audit.action.default.delete"
       },
       "form": {
-        "update_draft_set": "Créer ou mettre à jour l'ébauche",
-        "update_draft_replace": "Remplacer l'ébauche",
-        "update_publish": "Publier l'ébauche",
-        "update_draft_delete": "Abandonner l'ébauche",
+        "update_draft_set": "Créer ou mettre à jour le brouillon",
+        "update_draft_replace": "Remplacer le brouillon",
+        "update_publish": "Publier le brouillon",
+        "update_draft_delete": "Abandonner le brouillon",
         "attachment_update": "Mettre à jour les fichiers joints",
         "submission_export": "Télécharger les soumissions",
         "restore": "Restaurer",
@@ -124,7 +124,7 @@
       },
       "upgrade": {
         "process_form": "Traiter le formulaire",
-        "process_form_draft": "Traiter l'ébauche du formulaire",
+        "process_form_draft": "Traiter le brouillon du formulaire",
         "process_form_entities_version": "Marquer le formulaire pour mise à jour",
         "server": "Nouvelle version"
       },
@@ -261,7 +261,7 @@
     "submissions": "Soumissions",
     "projectRoles": "Rôles du projet",
     "formPreview": "Aperçu du Formulaire",
-    "draft": "Ébauche"
+    "draft": "Brouillon"
   },
   "alert": {
     "passwordTooShort": "Le mot de passe doit avoir au moins 10 caractères.",

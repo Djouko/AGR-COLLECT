@@ -121,9 +121,9 @@ const diffCounts = computed(() => {
   "fr": {
     "datasetCount": "Les soumissions à cette définition de Formulaire mettront à jour {count} liste d'entités. | Les soumissions à cette définition de Formulaire mettront à jour {count} listes d'entités. | Les soumissions à cette définition de Formulaire mettront à jour {count} liste(s) d'entités.",
     "diffCounts": {
-      "datasetsOnly": "Publier cette ébauche mettra à jour {count} liste d'entités. | Publier cette ébauche mettra à jour {count} listes d'entités. | Publier cette ébauche mettra à jour {count} liste(s) d'entités.",
+      "datasetsOnly": "Publier ce brouillon mettra à jour {count} liste d'entités. | Publier ce brouillon mettra à jour {count} listes d'entités. | Publier ce brouillon mettra à jour {count} liste(s) d'entités.",
       "newProperties": {
-        "full": "Publier cette ébauche mettra à jour {entityLists} liste(s) d'entités et créera {properties}.",
+        "full": "Publier ce brouillon mettra à jour {entityLists} liste(s) d'entités et créera {properties}.",
         "entityLists": "{count} Liste d'Entités | {count} Listes d'Entités | {count} Liste(s) d'Entités",
         "properties": "{count} propriété | {count} propriétés | {count} propriété(s)"
       }

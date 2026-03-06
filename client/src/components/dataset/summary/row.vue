@@ -139,7 +139,7 @@ const propertiesCount = computed(() => tn(
   },
   "fr": {
     "new": "nouveau !",
-    "addedByThisDraft": "Ajouté par cette ébauche"
+    "addedByThisDraft": "Ajouté par ce brouillon"
   },
   "id": {
     "new": "baru!"

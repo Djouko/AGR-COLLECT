@@ -10,13 +10,6 @@
         :class="{ disabled: loading }">
         <a href="#" @click.prevent="selectLocale(locale)">{{ info.name }}</a>
       </li>
-      <li class="divider" role="separator"></li>
-      <li>
-        <a href="https://docs.google.com/document/d/1C0MS_ytAEBHwbMkdR-QrtDrWAAh_EkJo2QRr4XyIOpk"
-          target="_blank" rel="noopener">
-          {{ $t('helpTranslate') }}
-        </a>
-      </li>
     </ul>
   </li>
 </template>
