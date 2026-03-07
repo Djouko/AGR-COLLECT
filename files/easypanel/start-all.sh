@@ -7,11 +7,18 @@ echo "============================================"
 
 # ---- 1. Set defaults for environment variables ----
 export DOMAIN="${DOMAIN:-localhost}"
+# Strip protocol prefix and trailing slash from DOMAIN (EasyPanel passes full URL)
+DOMAIN=$(echo "$DOMAIN" | sed 's|^https://||;s|^http://||;s|/$||')
+export DOMAIN
+
 export SYSADMIN_EMAIL="${SYSADMIN_EMAIL:-admin@agr-collect.local}"
 export SSL_TYPE="${SSL_TYPE:-upstream}"
 export HTTPS_PORT="${HTTPS_PORT:-443}"
 export HTTP_PORT="${HTTP_PORT:-80}"
 export OIDC_ENABLED="${OIDC_ENABLED:-false}"
+export OIDC_ISSUER_URL="${OIDC_ISSUER_URL:-}"
+export OIDC_CLIENT_ID="${OIDC_CLIENT_ID:-}"
+export OIDC_CLIENT_SECRET="${OIDC_CLIENT_SECRET:-}"
 
 export DB_HOST="${DB_HOST:-localhost}"
 export DB_USER="${DB_USER:-odk}"
@@ -38,10 +45,20 @@ export SENTRY_TRACE_RATE="${SENTRY_TRACE_RATE:-0.1}"
 
 export SESSION_LIFETIME="${SESSION_LIFETIME:-86400}"
 
+# S3 defaults (empty = disabled)
+export S3_SERVER="${S3_SERVER:-}"
+export S3_ACCESS_KEY="${S3_ACCESS_KEY:-}"
+export S3_SECRET_KEY="${S3_SECRET_KEY:-}"
+export S3_BUCKET_NAME="${S3_BUCKET_NAME:-}"
+
 export CERTBOT_EMAIL="${SYSADMIN_EMAIL}"
 
 # Nginx needs these
 export CERT_DOMAIN="${DOMAIN}"
+
+echo "  DOMAIN resolved to: ${DOMAIN}"
+echo "  DB_HOST: ${DB_HOST}"
+echo "  SSL_TYPE: ${SSL_TYPE}"
 
 # ---- 2. Generate secrets if not exist ----
 echo "[1/5] Checking secrets..."

@@ -36,6 +36,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
 COPY ./ ./
+RUN find . -name '*.sh' -exec sed -i 's/\r$//' {} + \
+    && find . -name '*.sh' -exec chmod +x {} +
 RUN files/prebuild/write-version.sh
 RUN files/prebuild/build-frontend.sh
 
@@ -79,11 +81,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openssl \
     gpg \
     perl \
+    mawk \
     python3 \
     python3-pip \
     python3-lxml \
     && rm -rf /var/lib/apt/lists/* \
-    && corepack enable
+    && corepack enable \
+    && mkdir -p /etc/nginx/conf.d /etc/nginx/ssl
 
 # -- Install PyXForm (Python) --
 RUN pip3 install --break-system-packages --no-cache-dir \
@@ -102,6 +106,10 @@ COPY files/service/config.json.template /usr/share/odk/
 COPY files/service/crontab /etc/cron.d/odk
 RUN sed -i 's/\r$//' /etc/cron.d/odk && chmod 644 /etc/cron.d/odk
 COPY files/service/odk-cmd /usr/bin/
+RUN find /usr/odk -name '*.sh' -exec sed -i 's/\r$//' {} + \
+    && find /usr/odk -name '*.sh' -exec chmod +x {} + \
+    && sed -i 's/\r$//' /scripts/envsub.awk \
+    && sed -i 's/\r$//' /usr/bin/odk-cmd && chmod +x /usr/bin/odk-cmd
 COPY --from=versions /tmp/sentry-versions/ ./sentry-versions
 
 # -- Nginx (Frontend + Reverse Proxy) --
@@ -143,7 +151,7 @@ COPY files/easypanel/supervisord.conf /etc/supervisor/conf.d/agr-collect.conf
 COPY files/easypanel/start-all.sh /scripts/start-all.sh
 RUN sed -i 's/\r$//' /scripts/start-all.sh && chmod +x /scripts/start-all.sh \
     && sed -i 's/\r$//' /scripts/setup-odk.sh && chmod +x /scripts/setup-odk.sh \
-    && sed -i 's/\r$//' /scripts/envsub.awk
+    && sed -i 's/\r$//' /scripts/envsub.awk && chmod +x /scripts/envsub.awk
 
 # -- Create required directories --
 RUN mkdir -p \
