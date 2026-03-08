@@ -32,13 +32,19 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(grep -oP 'VERSION_CODEN
 
 # ---------- Stage 2: Build Frontend ----------
 FROM node:${node_version}-slim AS frontend
+ARG GIT_SHA=unknown
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
 COPY ./ ./
 RUN find . -name '*.sh' -exec sed -i 's/\r$//' {} + \
     && find . -name '*.sh' -exec chmod +x {} +
-RUN files/prebuild/write-version.sh
+RUN if [ -d .git ]; then \
+      files/prebuild/write-version.sh; \
+    else \
+      echo "versions:" > /tmp/version.txt; \
+      echo "${GIT_SHA} (easypanel-build)" >> /tmp/version.txt; \
+    fi
 RUN files/prebuild/build-frontend.sh
 
 # ---------- Stage 3: Git Version Tags ----------
