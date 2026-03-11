@@ -6,6 +6,12 @@ echo " AGR-Collect Central - Unified Container"
 echo "============================================"
 
 # ---- 1. Set defaults for environment variables ----
+
+# CRITICAL: EasyPanel/container platforms inject PORT=80.
+# Our services each have their own ports (nginx:80, backend:8383, enketo:8005).
+# Unset PORT so Node.js apps don't override their configured ports.
+unset PORT 2>/dev/null || true
+
 export DOMAIN="${DOMAIN:-localhost}"
 # Strip protocol prefix and trailing slash from DOMAIN (EasyPanel passes full URL)
 DOMAIN=$(echo "$DOMAIN" | sed 's|^https://||;s|^http://||;s|/$||')
