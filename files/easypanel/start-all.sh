@@ -20,6 +20,10 @@ export OIDC_ISSUER_URL="${OIDC_ISSUER_URL:-}"
 export OIDC_CLIENT_ID="${OIDC_CLIENT_ID:-}"
 export OIDC_CLIENT_SECRET="${OIDC_CLIENT_SECRET:-}"
 
+# Node.js options (from docker-compose SERVICE_NODE_OPTIONS)
+export NODE_OPTIONS="${NODE_OPTIONS:-${SERVICE_NODE_OPTIONS:-}}"
+export PGAPPNAME="${PGAPPNAME:-odkcentral}"
+
 export DB_HOST="${DB_HOST:-localhost}"
 export DB_USER="${DB_USER:-odk}"
 export DB_PASSWORD="${DB_PASSWORD:-odk}"
@@ -44,6 +48,10 @@ export SENTRY_PROJECT="${SENTRY_PROJECT:-1298632}"
 export SENTRY_TRACE_RATE="${SENTRY_TRACE_RATE:-0.1}"
 
 export SESSION_LIFETIME="${SESSION_LIFETIME:-86400}"
+
+# Enketo needs these
+export SUPPORT_EMAIL="${SUPPORT_EMAIL:-${SYSADMIN_EMAIL}}"
+export ENKETO_SRC_DIR="/srv/src/enketo/packages/enketo-express"
 
 # S3 defaults (empty = disabled)
 export S3_SERVER="${S3_SERVER:-}"

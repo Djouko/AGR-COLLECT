@@ -88,6 +88,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gpg \
     perl \
     mawk \
+    default-jre-headless \
     python3 \
     python3-pip \
     python3-lxml \
@@ -110,13 +111,16 @@ COPY files/shared/envsub.awk /scripts/
 COPY files/service/scripts/ ./
 COPY files/service/config.json.template /usr/share/odk/
 COPY files/service/crontab /etc/cron.d/odk
-RUN sed -i 's/\r$//' /etc/cron.d/odk && chmod 644 /etc/cron.d/odk
 COPY files/service/odk-cmd /usr/bin/
+COPY --from=versions /tmp/sentry-versions/ ./sentry-versions
+
+# Fix CRLF + permissions on ALL scripts, templates, and config files (Windows source)
 RUN find /usr/odk -name '*.sh' -exec sed -i 's/\r$//' {} + \
     && find /usr/odk -name '*.sh' -exec chmod +x {} + \
-    && sed -i 's/\r$//' /scripts/envsub.awk \
-    && sed -i 's/\r$//' /usr/bin/odk-cmd && chmod +x /usr/bin/odk-cmd
-COPY --from=versions /tmp/sentry-versions/ ./sentry-versions
+    && sed -i 's/\r$//' /scripts/envsub.awk && chmod +x /scripts/envsub.awk \
+    && sed -i 's/\r$//' /usr/bin/odk-cmd && chmod +x /usr/bin/odk-cmd \
+    && sed -i 's/\r$//' /etc/cron.d/odk && chmod 644 /etc/cron.d/odk \
+    && sed -i 's/\r$//' /usr/share/odk/config.json.template
 
 # -- Nginx (Frontend + Reverse Proxy) --
 RUN mkdir -p /usr/share/odk/nginx/
@@ -131,17 +135,22 @@ COPY files/nginx/client-config.json.template /usr/share/odk/nginx/
 COPY --from=frontend client/dist/ /usr/share/nginx/html/
 COPY --from=frontend /tmp/version.txt /usr/share/nginx/html/
 
+# Fix CRLF on all nginx config/template files
+RUN find /usr/share/odk/nginx -type f -exec sed -i 's/\r$//' {} +
+
 # -- Enketo (Web Forms Engine) --
 COPY --from=enketo-src /srv/src/enketo/ /srv/src/enketo/
 COPY files/enketo/config.json.template /srv/src/enketo/packages/enketo-express/config/config.json.template
 COPY files/enketo/config.json.template /srv/src/enketo/packages/enketo-express/config/config.json
 COPY files/enketo/start-enketo.sh /srv/src/enketo/packages/enketo-express/start-enketo.sh
-RUN sed -i 's/\r$//' /srv/src/enketo/packages/enketo-express/start-enketo.sh \
+# Fix CRLF on all enketo files
+RUN find /srv/src/enketo/packages/enketo-express -maxdepth 2 \( -name '*.sh' -o -name '*.template' -o -name 'config.json' \) -exec sed -i 's/\r$//' {} + \
     && chmod +x /srv/src/enketo/packages/enketo-express/start-enketo.sh
 
 # -- Redis configs --
 COPY files/enketo/redis-enketo-main.conf /etc/redis/redis-main.conf
 COPY files/enketo/redis-enketo-cache.conf /etc/redis/redis-cache.conf
+RUN sed -i 's/\r$//' /etc/redis/redis-main.conf /etc/redis/redis-cache.conf
 
 # -- Secrets generator --
 COPY files/enketo/generate-secrets.sh /scripts/generate-secrets.sh
@@ -155,9 +164,8 @@ COPY files/easypanel/supervisord.conf /etc/supervisor/conf.d/agr-collect.conf
 
 # -- Startup script --
 COPY files/easypanel/start-all.sh /scripts/start-all.sh
-RUN sed -i 's/\r$//' /scripts/start-all.sh && chmod +x /scripts/start-all.sh \
-    && sed -i 's/\r$//' /scripts/setup-odk.sh && chmod +x /scripts/setup-odk.sh \
-    && sed -i 's/\r$//' /scripts/envsub.awk && chmod +x /scripts/envsub.awk
+RUN find /scripts -type f -exec sed -i 's/\r$//' {} + \
+    && chmod +x /scripts/*.sh /scripts/envsub.awk
 
 # -- Create required directories --
 RUN mkdir -p \
