@@ -145,7 +145,8 @@ COPY files/enketo/config.json.template /srv/src/enketo/packages/enketo-express/c
 COPY files/enketo/start-enketo.sh /srv/src/enketo/packages/enketo-express/start-enketo.sh
 # Fix CRLF on all enketo files
 RUN find /srv/src/enketo/packages/enketo-express -maxdepth 2 \( -name '*.sh' -o -name '*.template' -o -name 'config.json' \) -exec sed -i 's/\r$//' {} + \
-    && chmod +x /srv/src/enketo/packages/enketo-express/start-enketo.sh
+    && chmod +x /srv/src/enketo/packages/enketo-express/start-enketo.sh \
+    && echo "7.5.1" > /srv/src/enketo/packages/enketo-express/.tag.txt
 
 # -- Redis configs --
 COPY files/enketo/redis-enketo-main.conf /etc/redis/redis-main.conf
