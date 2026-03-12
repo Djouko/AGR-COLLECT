@@ -136,8 +136,20 @@ router.afterEach(unlessFailure(to => {
   router.beforeEach(to => {
     if (to.meta.requireLogin && !session.dataExists)
       return { path: '/login', query: { next: to.fullPath } };
-    if (to.meta.requireAnonymity && session.dataExists)
+    if (to.meta.requireAnonymity && session.dataExists) {
+      // If there is a `next` query parameter (e.g. from Enketo cookie auth
+      // redirect), honour it instead of always going to '/'. Only allow
+      // same-origin URLs to prevent open-redirect attacks.
+      const next = to.query?.next;
+      if (typeof next === 'string') {
+        try {
+          const url = new URL(next, window.location.origin);
+          if (url.origin === window.location.origin)
+            return url.pathname + url.search + url.hash;
+        } catch (_) { /* invalid URL – fall through to default */ }
+      }
       return '/';
+    }
     return true;
   });
 

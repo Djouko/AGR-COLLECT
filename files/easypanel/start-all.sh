@@ -112,7 +112,7 @@ with open('/usr/share/odk/config.json.template', 'w') as f:
     f.write(content)
 "
 sed -i 's|"url": "http://enketo:8005/-"|"url": "http://127.0.0.1:8005/-"|g' /usr/share/odk/config.json.template
-sed -i 's|"internalDomain": "https://nginx"|"internalDomain": "http://127.0.0.1:8383"|g' /usr/share/odk/config.json.template
+sed -i 's|"internalDomain": "https://nginx"|"internalDomain": "http://127.0.0.1"|g' /usr/share/odk/config.json.template
 
 # -- Enketo config: redis hosts and server url to localhost --
 ENKETO_CFG="/srv/src/enketo/packages/enketo-express/config/config.json.template"
