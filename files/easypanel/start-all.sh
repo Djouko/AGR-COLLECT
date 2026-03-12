@@ -124,6 +124,16 @@ cp "$ENKETO_CFG" "${ENKETO_CFG%.template}"
 
 echo "  Configuration patched for localhost."
 
+# ---- Diagnostic: show critical config values after patching ----
+echo "  [DIAG] Backend config.json.template key values:"
+echo "    xlsform.host = $(grep -o '"host":.*' /usr/share/odk/config.json.template | head -1)"
+echo "    enketo.url = $(grep -o '"url":.*"http[^"]*"' /usr/share/odk/config.json.template | head -1)"
+echo "    internalDomain = $(grep -o '"internalDomain":.*' /usr/share/odk/config.json.template | head -1)"
+echo "  [DIAG] Enketo config.json.template key values:"
+echo "    redis.main.host = $(grep -A1 '"main"' "$ENKETO_CFG" | grep host)"
+echo "    redis.cache.host = $(grep -A1 '"cache"' "$ENKETO_CFG" | grep host)"
+echo "    server url = $(grep '"server url"' "$ENKETO_CFG")"
+
 # ---- 4. Create required directories ----
 echo "[3/7] Creating directories..."
 mkdir -p /var/log/supervisor /usr/odk/config /var/lib/redis/main /var/lib/redis/cache /data/transfer /etc/dh /etc/selfsign /etc/secrets
