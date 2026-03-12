@@ -94,7 +94,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-lxml \
     && rm -rf /var/lib/apt/lists/* \
     && corepack enable \
-    && mkdir -p /etc/nginx/conf.d /etc/nginx/ssl
+    && mkdir -p /etc/nginx/conf.d /etc/nginx/ssl \
+    && printf '#!/bin/sh\ncase "$1" in describe) echo "7.5.1";; *) exit 0;; esac\n' > /usr/local/bin/git \
+    && chmod +x /usr/local/bin/git
 
 # -- Install PyXForm (Python) --
 RUN pip3 install --break-system-packages --no-cache-dir \
