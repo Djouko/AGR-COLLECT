@@ -75,7 +75,7 @@ echo "  DB_HOST: ${DB_HOST}"
 echo "  SSL_TYPE: ${SSL_TYPE}"
 
 # ---- 2. Generate secrets if not exist ----
-echo "[1/5] Checking secrets..."
+echo "[1/7] Checking secrets..."
 if [ ! -f /etc/secrets/enketo-secret ] || [ ! -f /etc/secrets/enketo-less-secret ] || [ ! -f /etc/secrets/enketo-api-key ]; then
     echo "  Generating encryption secrets..."
     /scripts/generate-secrets.sh
@@ -85,7 +85,7 @@ else
 fi
 
 # ---- 3. Patch configs for unified container (localhost) ----
-echo "[2/5] Patching configurations for unified container..."
+echo "[2/7] Patching configurations for unified container..."
 
 # -- Nginx: proxy to localhost instead of Docker service names --
 sed -i 's|proxy_pass http://service:8383|proxy_pass http://127.0.0.1:8383|g' /usr/share/odk/nginx/backend.conf
@@ -125,11 +125,11 @@ cp "$ENKETO_CFG" "${ENKETO_CFG%.template}"
 echo "  Configuration patched for localhost."
 
 # ---- 4. Create required directories ----
-echo "[3/5] Creating directories..."
+echo "[3/7] Creating directories..."
 mkdir -p /var/log/supervisor /usr/odk/config /var/lib/redis/main /var/lib/redis/cache /data/transfer /etc/dh /etc/selfsign /etc/secrets
 
 # ---- 5. Wait for PostgreSQL ----
-echo "[4/5] Waiting for PostgreSQL at ${DB_HOST}..."
+echo "[4/7] Waiting for PostgreSQL at ${DB_HOST}..."
 PGPORT="${PGPORT:-5432}"
 for i in $(seq 1 60); do
     if nc -z "$DB_HOST" "$PGPORT" 2>/dev/null; then
@@ -142,8 +142,36 @@ for i in $(seq 1 60); do
     sleep 1
 done
 
-# ---- 6. Start all services via supervisord ----
-echo "[5/5] Starting all services via supervisord..."
+# ---- 6. Repair stale Enketo IDs if Redis was wiped ----
+# When the container is rebuilt, Redis loses survey data but PostgreSQL keeps
+# stale Enketo IDs → "survey not found" errors. Detect this via a marker file
+# in the Redis volume and repair automatically.
+ENKETO_MARKER="/var/lib/redis/.enketo-initialized"
+if [ ! -f "$ENKETO_MARKER" ]; then
+    echo "[5/7] Fresh Redis detected - clearing stale Enketo survey IDs..."
+    if PGPASSWORD="${DB_PASSWORD}" psql -h "${DB_HOST}" -p "${PGPORT}" -U "${DB_USER}" -d "${DB_NAME}" -v ON_ERROR_STOP=0 <<'EOSQL'
+-- Clear stale Enketo IDs from published forms
+UPDATE forms SET "enketoId" = NULL, "enketoOnceId" = NULL
+  WHERE "enketoId" IS NOT NULL OR "enketoOnceId" IS NOT NULL;
+-- Clear stale Enketo IDs from draft form defs
+UPDATE form_defs SET "enketoId" = NULL WHERE "enketoId" IS NOT NULL;
+-- Re-queue worker events so backend re-creates Enketo surveys automatically
+INSERT INTO audits (action, "acteeId", "loggedAt", processed, claimed, failures)
+  SELECT 'form.update.publish', "acteeId", now(), NULL, NULL, 0
+  FROM forms WHERE "currentDefId" IS NOT NULL AND "deletedAt" IS NULL;
+EOSQL
+    then
+        echo "  Enketo IDs cleared. Worker will re-create surveys on startup."
+    else
+        echo "  WARNING: Could not clear Enketo IDs (database may be empty). Continuing..."
+    fi
+    touch "$ENKETO_MARKER"
+else
+    echo "[5/7] Enketo marker found - Redis data should be intact."
+fi
+
+# ---- 7. Start all services via supervisord ----
+echo "[6/7] Starting all services via supervisord..."
 echo "============================================"
 echo " Services: nginx, service, enketo, pyxform, redis-main, redis-cache"
 echo " Domain: ${DOMAIN}"
