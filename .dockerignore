@@ -1,2 +1,51 @@
 node_modules
+**/node_modules
+
 npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Editor / OS cruft
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local env / secrets - must never leak into an image
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets.properties
+/etc/
+local.*
+
+# Previous client build (the Dockerfile rebuilds it in the frontend stage)
+client/dist/
+client/node_modules/
+
+# Server build + test output
+server/dist/
+server/.nyc_output/
+server/coverage/
+server/test-results/
+
+# Test fixtures and CI (not needed at runtime)
+**/*.test.js
+**/*.spec.js
+.circleci/
+.github/
+
+# Docs not needed in the image
+docs/
+
+# Any previously built tarball
+*.tgz
+*.tar.gz
+
+# Git and hidden files – keep .git so write-version.sh can compute
+# SENTRY_RELEASE; exclude heavy local caches only.
+.git/hooks/
+.git/logs/
