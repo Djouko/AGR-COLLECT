@@ -301,10 +301,22 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
       .then((form) => Submissions.getCurrentDefByIds(params.projectId, params.xmlFormId, params.instanceId, false)
         .then(getOrNotFound)
         .then((def) => SubmissionAttachments.getCurrentForSubmissionId(form.id, def.submissionId, false)
-          .then((attachments) => (form.webformsEnabled ? `${env.domain}/projects/${form.projectId}/forms/${form.xmlFormId}/submissions/${params.instanceId}/edit` : enketo.edit(
-            `${env.domain}/v1/projects/${form.projectId}`,
-            env.domain, form, params.instanceId, def, attachments, auth.session.map((s) => s.token).orNull()
-          ))))
+          .then((attachments) => {
+            if (form.webformsEnabled) {
+              return `${env.domain}/projects/${form.projectId}/forms/${form.xmlFormId}/submissions/${params.instanceId}/edit`;
+            }
+            // Use internalDomain so Enketo can reach Central's API from inside
+            // the container (the public domain is typically not reachable from
+            // within the reverse-proxy network in EasyPanel / docker-compose).
+            // Keep env.domain for the user-facing return_url and edit_url host.
+            const internalBase = env.internalDomain || env.domain;
+            return enketo.edit(
+              `${internalBase}/v1/projects/${form.projectId}`,
+              env.domain, form, params.instanceId, def, attachments,
+              auth.session.map((s) => s.token).orNull(),
+              internalBase
+            );
+          }))
         .then(redirect(302)))));
 
   service.patch('/projects/:projectId/forms/:xmlFormId/submissions/:instanceId', endpoint(({ Forms, Submissions }, { params, auth, body }) =>

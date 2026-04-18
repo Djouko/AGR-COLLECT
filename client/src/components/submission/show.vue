@@ -2,13 +2,14 @@
   <div id="submission-show">
     <breadcrumbs v-if="dataExists" :links="breadcrumbLinks"/>
     <page-head v-show="dataExists">
-      <template #title>{{ submission.dataExists ? submission.instanceNameOrId : '' }}</template>
+      <template #title>{{ displayTitle }}</template>
     </page-head>
     <page-body>
       <loading :state="initiallyLoading"/>
       <div v-show="dataExists" class="row">
         <div class="col-xs-4">
           <submission-basic-details/>
+          <submission-data-details :project-id="projectId" :xml-form-id="xmlFormId"/>
         </div>
         <div class="col-xs-8">
           <submission-activity :project-id="projectId" :xml-form-id="xmlFormId"
@@ -35,6 +36,7 @@ import PageBody from '../page/body.vue';
 import PageHead from '../page/head.vue';
 import SubmissionActivity from './activity.vue';
 import SubmissionBasicDetails from './basic-details.vue';
+import SubmissionDataDetails from './data-details.vue';
 import SubmissionUpdateReviewState from './update-review-state.vue';
 import SubmissionDelete from './delete.vue';
 
@@ -56,6 +58,7 @@ export default {
     PageHead,
     SubmissionActivity,
     SubmissionBasicDetails,
+    SubmissionDataDetails,
     SubmissionDelete,
     SubmissionUpdateReviewState
   },
@@ -99,8 +102,23 @@ export default {
       return [
         { text: this.project.dataExists ? this.project.nameWithArchived : this.$t('resource.project'), path: this.projectPath(), icon: 'icon-archive' },
         { text: this.form.dataExists ? this.form.nameOrId : this.$t('resource.form'), path: this.formPath(), icon: 'icon-file' },
-        { text: this.submission.instanceNameOrId }
+        { text: this.displayTitle }
       ];
+    },
+    // Human-readable page title. When the form defines a custom instanceName
+    // (meta/instanceName), we use it. Otherwise we fall back to
+    // "{submitter} \u2014 {date}", which is far more meaningful than the raw
+    // "uuid:xxxxxxxx-..." that instanceNameOrId exposes by default.
+    displayTitle() {
+      if (!this.submission.dataExists) return '';
+      if (this.submission.instanceName) return this.submission.instanceName;
+      const sys = this.submission.__system;
+      if (sys && sys.submitterName && sys.submissionDate) {
+        const date = new Date(sys.submissionDate);
+        const formattedDate = isNaN(date.getTime()) ? sys.submissionDate : date.toLocaleString();
+        return this.$t('defaultTitle', { submitter: sys.submitterName, date: formattedDate });
+      }
+      return this.submission.instanceNameOrId;
     }
   },
   created() {
@@ -146,11 +164,12 @@ export default {
           extended: false
         }),
         this.submission.request({
+          // No $select: we want all field values so the data-details section
+          // can render the submitted answers alongside the metadata.
           url: apiPaths.odataSubmission(
             this.projectId,
             this.xmlFormId,
-            this.instanceId,
-            { $select: '__id,__system,meta' }
+            this.instanceId
           )
         }),
         this.submissionVersion.request({
@@ -203,7 +222,10 @@ export default {
     "back": {
       "title": "Submission Detail",
       "back": "Back to Submissions Table"
-    }
+    },
+    // Fallback page title when the form has no custom instanceName. Shown
+    // instead of the raw instance UUID. Keep it short.
+    "defaultTitle": "Submission by {submitter} \u2014 {date}"
   }
 }
 </i18n>
@@ -232,7 +254,8 @@ export default {
     "back": {
       "title": "Détails de la soumission",
       "back": "Retour au tableau de soumissions"
-    }
+    },
+    "defaultTitle": "Soumission de {submitter} \u2014 {date}"
   },
   "id": {
     "back": {

@@ -68,11 +68,19 @@ const _init = (hostname, pathname, port, protocol, apiKey) => {
     return { enketoId: body.enketo_id, enketoOnceId };
   };
 
-  const edit = (openRosaUrl, domain, form, logicalId, submissionDef, attachments, token) => {
+  // `domain` is the public domain used for the user-facing return_url and for
+  // rewriting the edit_url host so the browser reaches Enketo through our nginx.
+  // `internalDomain` (optional) is the domain Enketo uses to fetch attachments
+  // from Central's backend; when deployed behind a reverse proxy (EasyPanel,
+  // docker-compose), the public domain is not reachable from inside the
+  // container, so we must use the internal one. Falls back to `domain` for
+  // backward compatibility.
+  const edit = (openRosaUrl, domain, form, logicalId, submissionDef, attachments, token, internalDomain) => {
+    const attachmentDomain = internalDomain || domain;
     const attsMap = {};
     for (const att of attachments)
       if (att.blobId != null)
-        attsMap[url`instance_attachments[${att.name}]`] = domain + url`/v1/projects/${form.projectId}/forms/${form.xmlFormId}/submissions/${logicalId}/versions/${submissionDef.instanceId}/attachments/${att.name}`;
+        attsMap[url`instance_attachments[${att.name}]`] = attachmentDomain + url`/v1/projects/${form.projectId}/forms/${form.xmlFormId}/submissions/${logicalId}/versions/${submissionDef.instanceId}/attachments/${att.name}`;
 
     return enketoRequest('api/v2/instance', token, querystring.stringify({
       server_url: openRosaUrl,

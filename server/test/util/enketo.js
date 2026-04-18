@@ -73,9 +73,9 @@ const create = async (openRosaUrl, xmlFormId, token) => {
   return { enketoId, enketoOnceId: '::::abcdefgh' };
 };
 
-const edit = async (openRosaUrl, domain, form, logicalId, submissionDef, attachments, token) => {
+const edit = async (openRosaUrl, domain, form, logicalId, submissionDef, attachments, token, internalDomain) => {
   await request();
-  global.enketo.editData = { openRosaUrl, domain, form, logicalId, submissionDef, attachments, token };
+  global.enketo.editData = { openRosaUrl, domain, form, logicalId, submissionDef, attachments, token, internalDomain };
   return 'https://enketo/edit/url';
 };
 

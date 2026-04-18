@@ -74,6 +74,30 @@ echo "  DOMAIN resolved to: ${DOMAIN}"
 echo "  DB_HOST: ${DB_HOST}"
 echo "  SSL_TYPE: ${SSL_TYPE}"
 
+# SMTP configuration warning: if the host is still the default (localhost), no
+# email can actually be delivered. User creation still works (the backend has
+# been made resilient to SMTP failures) but admins will need to read password
+# reset links from the service logs until SMTP is configured.
+if [ "${EMAIL_HOST}" = "localhost" ]; then
+    echo ""
+    echo "  ================================================================"
+    echo "  !! WARNING: EMAIL_HOST is still 'localhost' (default)."
+    echo "  !! Activation and password-reset emails will NOT be delivered."
+    echo "  !! User accounts will be created, but invitation links will only"
+    echo "  !! appear in the backend logs (grep for 'password reset' or"
+    echo "  !! 'mail send failed'). To enable real email delivery set these"
+    echo "  !! EasyPanel environment variables:"
+    echo "  !!   EMAIL_HOST=smtp.gmail.com      (or your SMTP provider)"
+    echo "  !!   EMAIL_PORT=587                 (or 465 for SSL)"
+    echo "  !!   EMAIL_SECURE=false             (true if port 465)"
+    echo "  !!   EMAIL_IGNORE_TLS=false"
+    echo "  !!   EMAIL_USER=<smtp-user>"
+    echo "  !!   EMAIL_PASSWORD=<smtp-password-or-app-password>"
+    echo "  !!   EMAIL_FROM=no-reply@your-domain.com"
+    echo "  ================================================================"
+    echo ""
+fi
+
 # ---- 2. Generate secrets if not exist ----
 echo "[1/7] Checking secrets..."
 if [ ! -f /etc/secrets/enketo-secret ] || [ ! -f /etc/secrets/enketo-less-secret ] || [ ! -f /etc/secrets/enketo-api-key ]; then

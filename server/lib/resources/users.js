@@ -31,6 +31,16 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
     ])
       .then(([ exact, list ]) => exact.map((x) => [ x ]).orElse(list.orElse([])))));
 
+  // Wraps a mail() promise so that delivery failures do not abort the enclosing
+  // request. The user has already been created at this point, so bubbling up
+  // the SMTP error to the client would leave behind an orphan record and make
+  // the UI look broken when the mail server is simply unreachable (a common
+  // situation on a fresh deployment with no SMTP configured yet). We still log
+  // the failure to stderr so operators can diagnose it.
+  const sendMailNonFatal = (mailPromise, context) => mailPromise.catch((err) => {
+    process.stderr.write(`!! mail send failed for ${context}: ${err && err.message ? err.message : err}\n`);
+  });
+
   if (oidc.isEnabled()) {
     // Same as non-OIDC, except that password is random & unguessable
     service.post('/users', endpoint(({ Users, mail }, { body, auth }) =>
@@ -38,7 +48,7 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
         .then(() => User.fromApi(body).forV1OnlyCopyEmailToDisplayName())
         .then(Users.create)
         .then((savedUser) =>
-          mail(savedUser.email, 'accountCreatedForOidc')
+          sendMailNonFatal(mail(savedUser.email, 'accountCreatedForOidc'), `accountCreatedForOidc:${savedUser.email}`)
             .then(always(savedUser)))));
   } else {
     service.post('/users', endpoint(({ Users, mail }, { body, auth }) =>
@@ -47,9 +57,9 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
         .then(Users.create)
         .then((savedUser) => (isPresent(body.password)
           ? Users.updatePassword(savedUser, body.password)
-            .then(() => mail(savedUser.email, 'accountCreatedWithPassword'))
+            .then(() => sendMailNonFatal(mail(savedUser.email, 'accountCreatedWithPassword'), `accountCreatedWithPassword:${savedUser.email}`))
           : Users.provisionPasswordResetToken(savedUser)
-            .then((token) => mail(savedUser.email, 'accountCreated', { token })))
+            .then((token) => sendMailNonFatal(mail(savedUser.email, 'accountCreated', { token }), `accountCreated:${savedUser.email}`)))
           .then(always(savedUser)))));
 
     const endpointByInvalidateQuery = (cb) => (req, ...rest) =>
