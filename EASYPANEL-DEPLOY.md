@@ -4,6 +4,18 @@ This guide covers deploying the unified backend container (Nginx +
 Node.js backend + Enketo + PyXForm + Redis) to EasyPanel behind a
 Traefik reverse proxy.
 
+> **Fork divergence — important security note.** AGR-Collect ships
+> migration `20260115-01-agr-grant-app-user-submission-read.js` that
+> grants `submission.list` and `submission.read` to the `app-user`
+> role. This is required so the mobile client can poll submission
+> review state with the field-key token the agent already has on the
+> device. Consequence: any app-user scoped to a project can now
+> list/read ALL submissions of the forms it has access to (not only
+> the ones it submitted). This is acceptable for trusted intra-project
+> field teams; do NOT deploy this fork for public/untrusted data
+> collection without re-evaluating. See the migration file for the
+> full rationale.
+
 **Architecture**
 ```
 [Internet] -> EasyPanel Traefik (HTTPS, Let's Encrypt)
