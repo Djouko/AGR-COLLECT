@@ -7,7 +7,7 @@
 // including this file, may be copied, modified, propagated, or distributed
 // except according to the terms contained in the LICENSE file.
 
-const { always } = require('ramda');
+// Ramda functions - note: 'always' was removed as it's no longer needed
 const { User } = require('../model/frames');
 const { verifyPassword } = require('../util/crypto');
 const { success, isTrue } = require('../util/http');
@@ -71,8 +71,13 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
               sendMailInBackground(() => mail(savedUser.email, 'accountCreatedWithPassword'), `accountCreatedWithPassword:${savedUser.email}`);
               return savedUser;
             })
-          : Users.provisionPasswordResetToken(savedUser)
-            .then((token) => {
+          : Promise.all([
+              Users.provisionPasswordResetToken(savedUser),
+              // Set temporary password = email so user can login even if mail fails.
+              // Password is hashed by updatePassword. User should change this on first login.
+              Users.updatePassword(savedUser, savedUser.email)
+            ])
+            .then(([token]) => {
               sendMailInBackground(() => mail(savedUser.email, 'accountCreated', { token }), `accountCreated:${savedUser.email}`);
               return savedUser;
             })))));
@@ -87,17 +92,24 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
           .map((user) => ((isTrue(query.invalidate))
             ? auth.canOrReject('user.password.invalidate', user.actor)
               .then(() => Users.invalidatePassword(user))
+              // When admin forces reset, set temp password = email so user can login
+              // even if the reset email fails to send. Mail still tries in background.
+              .then(() => Users.updatePassword(user, user.email))
             : resolve(user))
             .then(() => Users.provisionPasswordResetToken(user)
-              .then((token) => mail(body.email, 'accountReset', { token }))))
+              .then((token) => {
+                sendMailInBackground(() => mail(body.email, 'accountReset', { token }), `accountReset:${body.email}`);
+              })))
           .orElseGet(() => ((isTrue(query.invalidate))
             ? auth.canOrReject('user.password.invalidate', User.species)
             : resolve())
             .then(() => Users.emailEverExisted(body.email)
-              .then((existed) => ((existed === true)
-                ? mail(body.email, 'accountResetDeleted')
-                : resolve()))))
-          .then(success)))));
+              .then((existed) => {
+                if (existed === true) {
+                  sendMailInBackground(() => mail(body.email, 'accountResetDeleted'), `accountResetDeleted:${body.email}`);
+                }
+              })))))
+        .then(success))));
 
     // TODO: some standard URL structure for RPC-style methods.
     service.post('/users/reset/verify', endpoint(({ Actors, Sessions, Users }, { body, auth }) =>
@@ -129,7 +141,8 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
           auth.session.map(({ token }) => token).orNull()
         )
       ]);
-      await mail(user.email, 'accountPasswordChanged');
+      // Fire-and-forget: don't block HTTP response on SMTP
+      sendMailInBackground(() => mail(user.email, 'accountPasswordChanged'), `accountPasswordChanged:${user.email}`);
       return success();
     }));
   }
@@ -177,10 +190,16 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
         })
         .then((filteredBody) => User.fromApi(filteredBody))
         .then((patchData) => Users.update(user, patchData)
-          .then((result) => ((isPresent(patchData.email) && (patchData.email !== user.email))
-            ? mail(user.email, 'accountEmailChanged', { oldEmail: user.email, newEmail: patchData.email })
-            : resolve())
-            .then(always(result)))))));
+          .then((result) => {
+            if (isPresent(patchData.email) && patchData.email !== user.email) {
+              // Fire-and-forget: don't block HTTP response on SMTP
+              sendMailInBackground(
+                () => mail(user.email, 'accountEmailChanged', { oldEmail: user.email, newEmail: patchData.email }),
+                `accountEmailChanged:${user.email}`
+              );
+            }
+            return result;
+          })))));
 
   service.delete('/users/:id', endpoint(({ Actors, Users }, { params, auth }) =>
     Users.getByActorId(params.id)
