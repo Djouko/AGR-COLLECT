@@ -108,7 +108,19 @@ Gestion complète des sites avec visualisation cartographique
     </div>
 
     <div v-else-if="viewMode === 'map'" class="map-section" ref="mapSectionEl">
+      <!--
+        Overlay loading spinner while the map is warming up (tiles + WebGL
+        init + resize). Mirrors the UX of the submissions map
+        (components/map/view.vue) so the user never sees an apparently
+        blank area. `showingMap` flips to true when geojson-map fires
+        @show and back to false when it fires @shown.
+      -->
+      <div v-if="showingMap || !sitesGeoJson" class="map-loading-overlay">
+        <div class="spinner"></div>
+        <p>{{ sitesGeoJson ? $t('mapInitializing') : $t('mapNoGeolocatedSites') }}</p>
+      </div>
       <geojson-map ref="geojsonMap" :data="sitesGeoJson" :sizer="mapSizer"
+        @show="showingMap = true" @shown="showingMap = false"
         @selection-changed="onMapSelectionChanged" @hit="onMapHit"/>
       <map-popup v-show="mapSelectedSite != null" ref="sitePopup"
         :back="mapOverlap != null && mapOverlap.length > 1" @hide="hideMapPopup" @back="backToOverlap">
@@ -593,6 +605,9 @@ export default {
       mapSelection: null,
       mapOverlap: null,
       mapSelectedFromOverlap: false,
+      // True while geojson-map is warming up (between @show and @shown).
+      // Used to display an overlay spinner so the map area is never blank.
+      showingMap: false,
       currentUser: null,
       userRoles: []
     };
@@ -606,7 +621,14 @@ export default {
       return this.sites.filter(s => s.status === 'active').length;
     },
     totalMedia() {
-      return this.sites.reduce((sum, s) => sum + (s.media?.length || 0), 0);
+      // Prefer the server-side count (filled by loadMediaCounts) so the
+      // stat is accurate before any site detail is opened. Fall back to
+      // the in-memory `media` array length for sites where the full
+      // payload has already been hydrated.
+      return this.sites.reduce(
+        (sum, s) => sum + (s.mediaCount != null ? s.mediaCount : (s.media?.length || 0)),
+        0
+      );
     },
     totalSubmissions() {
       return this.sites.reduce((sum, s) => sum + (s.submissionsCount || 0), 0);
@@ -787,50 +809,31 @@ export default {
         if (this.selectedProject) {
           url = `/v1/projects/${this.selectedProject}/sites`;
         }
-        
+
         const res = await this.request.get(url);
         let sites = res.data || [];
-        
-        for (const site of sites) {
-          try {
-            const mediaRes = await this.request.get(apiPaths.siteMedia(site.id));
-            const mediaList = mediaRes.data || [];
-            
-            site.media = await Promise.all(mediaList.map(async (m) => {
-              const mediaUrl = apiPaths.siteMediaContent(site.id, m.id);
-              let blobUrl = null;
-              
-              try {
-                const blobRes = await this.request.get(mediaUrl, { responseType: 'blob' });
-                if (blobRes.data) {
-                  blobUrl = URL.createObjectURL(blobRes.data);
-                  this.mediaObjectUrls[`${site.id}-${m.id}`] = blobUrl;
-                }
-              } catch (err) {
-                console.warn(`Failed to load media ${m.id}:`, err);
-              }
-              
-              return {
-                ...m,
-                url: mediaUrl,
-                blobUrl: blobUrl,
-                thumbnail: blobUrl || mediaUrl
-              };
-            }));
-          } catch (e) {
-            site.media = [];
-          }
-        }
-        
+
+        // IMPORTANT: we do NOT preload media blobs here. Doing so meant one
+        // HTTP call *per media file* on initial render, serialized per
+        // site, which made the map view appear broken (blank for 30s+) on
+        // any project with a handful of sites. Media is now lazy-loaded in
+        // `ensureSiteMedia(site)` when the user actually opens a site
+        // detail. Here we only keep the cheap metadata that the list /
+        // grid / map views need.
         sites = sites.map(site => ({
           ...site,
-          coordinates: site.latitude && site.longitude ? {
-            lat: parseFloat(site.latitude),
-            lng: parseFloat(site.longitude)
-          } : null,
+          // `site.latitude && site.longitude` wrongly rejects lat/lng == 0
+          // (which are valid geographic coordinates). Use an explicit
+          // nullish check instead.
+          coordinates: (site.latitude != null && site.longitude != null &&
+                        site.latitude !== '' && site.longitude !== '')
+            ? { lat: parseFloat(site.latitude), lng: parseFloat(site.longitude) }
+            : null,
           placeName: null,
           projectName: this.projects.find(p => p.id === site.projectId)?.name || `Projet ${site.projectId}`,
-          media: site.media || [],
+          // Placeholder — filled on demand by `ensureSiteMedia`.
+          media: [],
+          mediaLoaded: false,
           submissions: site.submissions || []
         }));
         
@@ -848,9 +851,15 @@ export default {
         
         this.sites = sites;
         this.filterSites();
-        
+
         // Async resolve uncached place names
         this.resolveAllPlaceNames();
+
+        // Non-blocking: fetch media *metadata only* (no blobs) in parallel
+        // for every site so the "total media" stat card is accurate
+        // without paying the blob-download cost up-front. Runs after the
+        // map is already on screen so it can't delay rendering.
+        this.loadMediaCounts();
       } catch (e) {
         console.error('Error loading sites from API, falling back to demo:', e);
         this.sites = await this.generateDemoSites();
@@ -1043,10 +1052,68 @@ export default {
 
     selectSite(site) {
       this.selectedSite = site;
+      // Lazy-load the media for this site the first time the user opens
+      // it. Doing it here (rather than up-front in loadSites) keeps the
+      // map / grid / list views responsive even when a project has many
+      // sites with lots of media attached.
+      this.ensureSiteMedia(site);
+    },
+
+    async loadMediaCounts() {
+      // Cheap: JSON-only media list per site, run concurrently.
+      // Updates `mediaCount` on each site for the stats card; does NOT
+      // download the actual blob content (that still happens lazily in
+      // `ensureSiteMedia`).
+      const jobs = this.sites
+        .filter(s => !s.isDemo && s.mediaCount == null)
+        .map(async (site) => {
+          try {
+            const r = await this.request.get(apiPaths.siteMedia(site.id));
+            site.mediaCount = Array.isArray(r.data) ? r.data.length : 0;
+          } catch (_) {
+            site.mediaCount = 0;
+          }
+        });
+      await Promise.all(jobs);
+      // Force reactivity on stats computed from `this.sites`.
+      this.sites = [...this.sites];
+    },
+
+    async ensureSiteMedia(site) {
+      if (!site || site.mediaLoaded) return;
+      site.mediaLoaded = true; // optimistic to avoid duplicate fetches
+      try {
+        const mediaRes = await this.request.get(apiPaths.siteMedia(site.id));
+        const mediaList = mediaRes.data || [];
+        // Run blob downloads in parallel — one per-site detail view only,
+        // so the concurrency is bounded by `mediaList.length`.
+        site.media = await Promise.all(mediaList.map(async (m) => {
+          const mediaUrl = apiPaths.siteMediaContent(site.id, m.id);
+          let blobUrl = null;
+          try {
+            const blobRes = await this.request.get(mediaUrl, { responseType: 'blob' });
+            if (blobRes.data) {
+              blobUrl = URL.createObjectURL(blobRes.data);
+              this.mediaObjectUrls[`${site.id}-${m.id}`] = blobUrl;
+            }
+          } catch (err) {
+            console.warn(`Failed to load media ${m.id}:`, err);
+          }
+          return { ...m, url: mediaUrl, blobUrl, thumbnail: blobUrl || mediaUrl };
+        }));
+        // Trigger reactivity: replace the site entry in `this.sites` so
+        // Vue re-renders any bindings observing `site.media`.
+        const idx = this.sites.findIndex(s => s.id === site.id);
+        if (idx !== -1) this.sites.splice(idx, 1, { ...site });
+      } catch (e) {
+        console.warn('Failed to load media for site', site.id, e);
+        site.media = [];
+      }
     },
 
     viewSite(site) {
       this.selectedSite = site;
+      this.ensureSiteMedia(site);
     },
 
     editSite(site) {
@@ -1368,6 +1435,8 @@ export default {
     "loading": "Loading sites...",
     "noSites": "No sites found",
     "noLocation": "No location",
+    "mapInitializing": "Preparing the map…",
+    "mapNoGeolocatedSites": "No site has geographic coordinates yet. Add coordinates to your sites to see them on the map.",
     "filters": {
       "project": "Project",
       "allProjects": "All projects",
@@ -1471,6 +1540,8 @@ export default {
     "loading": "Chargement des sites...",
     "noSites": "Aucun site trouvé",
     "noLocation": "Pas de localisation",
+    "mapInitializing": "Préparation de la carte…",
+    "mapNoGeolocatedSites": "Aucun site n'a encore de coordonnées géographiques. Ajoutez des coordonnées à vos sites pour les voir sur la carte.",
     "filters": {
       "project": "Projet",
       "allProjects": "Tous les projets",
@@ -1819,6 +1890,27 @@ export default {
 
   :deep(.geojson-map) {
     min-height: 500px;
+  }
+
+  .map-loading-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: rgba(243, 244, 246, 0.75);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    pointer-events: none;
+
+    p {
+      margin: 0;
+      color: #374151;
+      font-weight: 500;
+      text-align: center;
+      padding: 0 20px;
+    }
   }
 }
 

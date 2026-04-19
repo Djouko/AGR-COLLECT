@@ -31,15 +31,24 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
     ])
       .then(([ exact, list ]) => exact.map((x) => [ x ]).orElse(list.orElse([])))));
 
-  // Wraps a mail() promise so that delivery failures do not abort the enclosing
-  // request. The user has already been created at this point, so bubbling up
-  // the SMTP error to the client would leave behind an orphan record and make
-  // the UI look broken when the mail server is simply unreachable (a common
-  // situation on a fresh deployment with no SMTP configured yet). We still log
-  // the failure to stderr so operators can diagnose it.
-  const sendMailNonFatal = (mailPromise, context) => mailPromise.catch((err) => {
-    process.stderr.write(`!! mail send failed for ${context}: ${err && err.message ? err.message : err}\n`);
-  });
+  // Fire-and-forget mail send. The user record has already been written at the
+  // point this is invoked, so we must not block the HTTP response on SMTP —
+  // otherwise a misconfigured or unreachable mail server turns every user
+  // creation into a 504 (reverse proxies typically cut the request at 60s while
+  // nodemailer's default socket timeout is 120s+). The mail is started in the
+  // background and any error is logged to stderr without ever being propagated.
+  const sendMailInBackground = (mailFactory, context) => {
+    try {
+      const p = mailFactory();
+      if (p && typeof p.catch === 'function') {
+        p.catch((err) => {
+          process.stderr.write(`!! mail send failed for ${context}: ${err && err.message ? err.message : err}\n`);
+        });
+      }
+    } catch (err) {
+      process.stderr.write(`!! mail send threw synchronously for ${context}: ${err && err.message ? err.message : err}\n`);
+    }
+  };
 
   if (oidc.isEnabled()) {
     // Same as non-OIDC, except that password is random & unguessable
@@ -47,9 +56,10 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
       auth.canOrReject('user.create', User.species)
         .then(() => User.fromApi(body).forV1OnlyCopyEmailToDisplayName())
         .then(Users.create)
-        .then((savedUser) =>
-          sendMailNonFatal(mail(savedUser.email, 'accountCreatedForOidc'), `accountCreatedForOidc:${savedUser.email}`)
-            .then(always(savedUser)))));
+        .then((savedUser) => {
+          sendMailInBackground(() => mail(savedUser.email, 'accountCreatedForOidc'), `accountCreatedForOidc:${savedUser.email}`);
+          return savedUser;
+        })));
   } else {
     service.post('/users', endpoint(({ Users, mail }, { body, auth }) =>
       auth.canOrReject('user.create', User.species)
@@ -57,10 +67,15 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
         .then(Users.create)
         .then((savedUser) => (isPresent(body.password)
           ? Users.updatePassword(savedUser, body.password)
-            .then(() => sendMailNonFatal(mail(savedUser.email, 'accountCreatedWithPassword'), `accountCreatedWithPassword:${savedUser.email}`))
+            .then(() => {
+              sendMailInBackground(() => mail(savedUser.email, 'accountCreatedWithPassword'), `accountCreatedWithPassword:${savedUser.email}`);
+              return savedUser;
+            })
           : Users.provisionPasswordResetToken(savedUser)
-            .then((token) => sendMailNonFatal(mail(savedUser.email, 'accountCreated', { token }), `accountCreated:${savedUser.email}`)))
-          .then(always(savedUser)))));
+            .then((token) => {
+              sendMailInBackground(() => mail(savedUser.email, 'accountCreated', { token }), `accountCreated:${savedUser.email}`);
+              return savedUser;
+            })))));
 
     const endpointByInvalidateQuery = (cb) => (req, ...rest) =>
       (isTrue(req.query.invalidate) ? endpoint(cb) : anonymousEndpoint(cb))(req, ...rest);

@@ -16,6 +16,9 @@
         "port": ${EMAIL_PORT},
         "secure": ${EMAIL_SECURE},
         "ignoreTLS": ${EMAIL_IGNORE_TLS},
+        "connectionTimeout": 10000,
+        "greetingTimeout": 10000,
+        "socketTimeout": 15000,
         "auth": {
           "user": "${EMAIL_USER}",
           "pass": "${EMAIL_PASSWORD}"
