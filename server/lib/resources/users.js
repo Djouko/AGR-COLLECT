@@ -71,13 +71,8 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
               sendMailInBackground(() => mail(savedUser.email, 'accountCreatedWithPassword'), `accountCreatedWithPassword:${savedUser.email}`);
               return savedUser;
             })
-          : Promise.all([
-              Users.provisionPasswordResetToken(savedUser),
-              // Set temporary password = email so user can login even if mail fails.
-              // Password is hashed by updatePassword. User should change this on first login.
-              Users.updatePassword(savedUser, savedUser.email)
-            ])
-            .then(([token]) => {
+          : Users.provisionPasswordResetToken(savedUser)
+            .then((token) => {
               sendMailInBackground(() => mail(savedUser.email, 'accountCreated', { token }), `accountCreated:${savedUser.email}`);
               return savedUser;
             })))));
@@ -92,9 +87,6 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
           .map((user) => ((isTrue(query.invalidate))
             ? auth.canOrReject('user.password.invalidate', user.actor)
               .then(() => Users.invalidatePassword(user))
-              // When admin forces reset, set temp password = email so user can login
-              // even if the reset email fails to send. Mail still tries in background.
-              .then(() => Users.updatePassword(user, user.email))
             : resolve(user))
             .then(() => Users.provisionPasswordResetToken(user)
               .then((token) => {
