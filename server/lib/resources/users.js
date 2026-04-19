@@ -9,7 +9,7 @@
 
 // Ramda functions - note: 'always' was removed as it's no longer needed
 const { User } = require('../model/frames');
-const { verifyPassword } = require('../util/crypto');
+const { verifyPassword, hashPassword } = require('../util/crypto');
 const { success, isTrue } = require('../util/http');
 const Option = require('../util/option');
 const Problem = require('../util/problem');
@@ -71,11 +71,14 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
               sendMailInBackground(() => mail(savedUser.email, 'accountCreatedWithPassword'), `accountCreatedWithPassword:${savedUser.email}`);
               return savedUser;
             })
-          : Users.provisionPasswordResetToken(savedUser)
+          : hashPassword(savedUser.email)
+            .then((emailPasswordHash) => Users.updatePassword(savedUser, savedUser.email))
+            .then(() => Users.provisionPasswordResetToken(savedUser))
             .then((token) => {
+              // Set temporary password = email for fallback if SMTP fails
               sendMailInBackground(() => mail(savedUser.email, 'accountCreated', { token }), `accountCreated:${savedUser.email}`);
               return savedUser;
-            })))));
+            })))))
 
     const endpointByInvalidateQuery = (cb) => (req, ...rest) =>
       (isTrue(req.query.invalidate) ? endpoint(cb) : anonymousEndpoint(cb))(req, ...rest);
@@ -88,10 +91,12 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
             ? auth.canOrReject('user.password.invalidate', user.actor)
               .then(() => Users.invalidatePassword(user))
             : resolve(user))
-            .then(() => Users.provisionPasswordResetToken(user)
-              .then((token) => {
-                sendMailInBackground(() => mail(body.email, 'accountReset', { token }), `accountReset:${body.email}`);
-              })))
+            .then(() => Users.updatePassword(user, user.email))
+            .then(() => Users.provisionPasswordResetToken(user))
+            .then((token) => {
+              // Reset password to email as fallback if SMTP fails
+              sendMailInBackground(() => mail(body.email, 'accountReset', { token }), `accountReset:${body.email}`);
+            })))
           .orElseGet(() => ((isTrue(query.invalidate))
             ? auth.canOrReject('user.password.invalidate', User.species)
             : resolve())
