@@ -100,7 +100,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # -- Install PyXForm (Python) --
 RUN pip3 install --break-system-packages --no-cache-dir \
-    pyxform==4.2.0 flask gunicorn
+    pyxform==4.2.0 flask gunicorn openpyxl
 
 # -- Backend Service (Node.js API) --
 WORKDIR /usr/odk
@@ -188,5 +188,8 @@ RUN rm -f /etc/nginx/sites-enabled/default /etc/nginx/conf.d/default.conf
 VOLUME ["/etc/secrets", "/data/transfer", "/etc/dh", "/var/lib/redis"]
 
 EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=5 \
+  CMD sh -c 'curl -fsS http://127.0.0.1/ 1>/dev/null 2>&1 || exit 1'
 
 ENTRYPOINT ["/scripts/start-all.sh"]

@@ -36,4 +36,17 @@ const initAdmin = async () => {
   }
 };
 
-initAdmin();
+// Without this top-level await, Node can exit before initAdmin() completes,
+// and PM2/supervisord has no visibility into whether the create succeeded,
+// which made productions boots appear to "forget" to seed the admin user.
+initAdmin()
+  .then(() => {
+    console.log('create-admin finished.');
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('create-admin crashed:', err && err.stack ? err.stack : err);
+    // Always exit success: even on failure we want the service to start so
+    // the admin can later be created manually via odk-cmd user-promote.
+    process.exit(0);
+  });
