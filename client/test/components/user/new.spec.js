@@ -90,6 +90,52 @@ describe('UserNew', () => {
           data.displayName.should.equal('New Name');
         })
         .respondWithProblem());
+
+    it('sends the initial password if there is one', () =>
+      mockHttp()
+        .mount(UserNew, {
+          props: { state: true }
+        })
+        .request(async (modal) => {
+          await modal.get('input[type="email"]').setValue('new@email.com');
+          await modal.get('input[type="password"]').setValue('initialPassword1');
+          return modal.get('form').trigger('submit');
+        })
+        .beforeEachResponse((_, { data }) => {
+          data.password.should.equal('initialPassword1');
+        })
+        .respondWithProblem());
+  });
+
+  describe('initial password field', () => {
+    it('is optional and requires at least 10 characters', () => {
+      const modal = mount(UserNew, {
+        props: { state: true }
+      });
+      const input = modal.get('input[type="password"]');
+      input.element.required.should.be.false;
+      input.attributes('minlength').should.equal('10');
+    });
+
+    it('is not shown if OIDC is enabled', () => {
+      const modal = mount(UserNew, {
+        props: { state: true },
+        container: {
+          config: { oidcEnabled: true }
+        }
+      });
+      modal.find('input[type="password"]').exists().should.be.false;
+    });
+
+    it('is reset after the modal is hidden', async () => {
+      const modal = mount(UserNew, {
+        props: { state: true }
+      });
+      await modal.get('input[type="password"]').setValue('initialPassword1');
+      await modal.setProps({ state: false });
+      await modal.setProps({ state: true });
+      modal.get('input[type="password"]').element.value.should.equal('');
+    });
   });
 
   it('implements some standard button things', () =>

@@ -25,6 +25,9 @@ ADMIN_EMAIL="${ADMIN_EMAIL:-admin@agr-collect.local}" \
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-agrcollect2025}" \
 node ./lib/bin/create-admin.js || true
 
+echo "checking SMTP configuration (background).."
+node ./lib/bin/check-mail.js &
+
 # Logs based on SENTRY_RELEASE and SENTRY_TAGS env variables
 echo "logging server upgrade.."
 node ./lib/bin/log-upgrade
@@ -75,7 +78,7 @@ determine_worker_count() {
 }
 
 MEMTOT=$(get_memory_limit)
-WORKER_COUNT=$(determine_worker_count "$MEMTOT")
+WORKER_COUNT="${WORKER_COUNT:-$(determine_worker_count "$MEMTOT")}"
 export WORKER_COUNT
 echo "using $WORKER_COUNT worker(s) based on available memory ($MEMTOT).."
 

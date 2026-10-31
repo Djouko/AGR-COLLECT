@@ -63,6 +63,11 @@ RUN (git describe --tags --dirty 2>/dev/null || echo "unknown") > /tmp/sentry-ve
 # ---------- Stage 4: Enketo from official image ----------
 FROM ghcr.io/enketo/enketo:7.5.1 AS enketo-src
 
+# ---------- Stage 5: pyxform-http from official image ----------
+# Same converter as docker-compose (pyxform service), so XLSForm uploads behave
+# identically: form ID fallback, .xls/.xlsx detection, ODK Validate.
+FROM ghcr.io/getodk/pyxform-http:v4.2.0 AS pyxform-src
+
 # ============================================
 # FINAL STAGE - Unified Container
 # ============================================
@@ -84,6 +89,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cron \
     procps \
     netcat-openbsd \
+    curl \
+    ca-certificates \
     openssl \
     gpg \
     perl \
@@ -91,16 +98,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     default-jre-headless \
     python3 \
     python3-pip \
-    python3-lxml \
     && rm -rf /var/lib/apt/lists/* \
-    && corepack enable \
-    && mkdir -p /etc/nginx/conf.d /etc/nginx/ssl \
-    && printf '#!/bin/sh\ncase "$1" in describe) echo "7.5.1";; *) exit 0;; esac\n' > /usr/local/bin/git \
-    && chmod +x /usr/local/bin/git
+    && mkdir -p /etc/nginx/conf.d /etc/nginx/ssl
 
-# -- Install PyXForm (Python) --
-RUN pip3 install --break-system-packages --no-cache-dir \
-    pyxform==4.2.0 flask gunicorn openpyxl
+# -- PyXForm HTTP server (official app + its exact dependency set) --
+COPY files/easypanel/pyxform-requirements.txt /opt/pyxform-http/requirements.txt
+# pip's --retries does not cover a download that stalls midway: rerun pip (the
+# wheels already fetched stay in its cache) and fail only after 3 attempts.
+RUN for attempt in 1 2 3; do \
+      pip3 install --break-system-packages --retries 10 --timeout 120 \
+        -r /opt/pyxform-http/requirements.txt && break; \
+      [ "$attempt" = 3 ] && exit 1; sleep 10; \
+    done \
+    && rm -rf /root/.cache/pip
+COPY --from=pyxform-src /app/main.py /opt/pyxform-http/main.py
 
 # -- Backend Service (Node.js API) --
 WORKDIR /usr/odk
@@ -159,9 +170,6 @@ RUN sed -i 's/\r$//' /etc/redis/redis-main.conf /etc/redis/redis-cache.conf
 COPY files/enketo/generate-secrets.sh /scripts/generate-secrets.sh
 RUN sed -i 's/\r$//' /scripts/generate-secrets.sh && chmod +x /scripts/generate-secrets.sh
 
-# -- PyXForm server --
-COPY files/easypanel/pyxform-server.py /opt/pyxform/pyxform-server.py
-
 # -- Supervisord config --
 COPY files/easypanel/supervisord.conf /etc/supervisor/conf.d/agr-collect.conf
 
@@ -189,7 +197,9 @@ VOLUME ["/etc/secrets", "/data/transfer", "/etc/dh", "/var/lib/redis"]
 
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=5 \
-  CMD sh -c 'curl -fsS http://127.0.0.1/ 1>/dev/null 2>&1 || exit 1'
+# Swarm (EasyPanel) replaces the container when this fails, so it must only
+# depend on tools installed above. First boot runs ~200 migrations: allow 3 min.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=180s --retries=5 \
+  CMD curl -fsS -o /dev/null http://127.0.0.1/ && nc -z 127.0.0.1 8383 || exit 1
 
 ENTRYPOINT ["/scripts/start-all.sh"]

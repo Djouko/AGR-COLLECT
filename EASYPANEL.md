@@ -37,7 +37,7 @@ Dans EasyPanel, créez un nouveau projet nommé `agr-collect`.
 2. Nom : `app`
 3. Source : **GitHub** → sélectionnez votre repository `AGR-COLLECT`
 4. **Branch** : `master`
-5. **Build Path** : `/central` (le sous-dossier contenant le Dockerfile)
+5. **Build Path** : `/` (le `Dockerfile` est à la racine du dépôt `AGR-COLLECT`)
 6. **Dockerfile Path** : `Dockerfile`
 
 ### 4. Configurer les variables d'environnement
@@ -56,19 +56,28 @@ Dans les paramètres du service `app`, ajoutez ces variables :
 | `DB_NAME` | *(de l'étape 2)* | Nom de la base de données |
 | `SYSADMIN_EMAIL` | `admin@agr-collect.local` | Email admin système |
 | `ADMIN_EMAIL` | `admin@agr-collect.local` | Email du compte admin |
-| `ADMIN_PASSWORD` | `agrcollect2025` | Mot de passe admin |
+| `ADMIN_PASSWORD` | *(mot de passe fort, 10 caractères min.)* | Mot de passe du compte admin créé au premier démarrage. Ne gardez pas la valeur par défaut documentée. |
 
-#### Variables email (Gmail SMTP)
+#### Variables email (SMTP)
 
-| Variable | Valeur | Description |
-|----------|--------|-------------|
-| `EMAIL_FROM` | `votre-email@gmail.com` | Expéditeur |
-| `EMAIL_HOST` | `smtp.gmail.com` | Serveur SMTP |
-| `EMAIL_PORT` | `587` | Port SMTP |
-| `EMAIL_SECURE` | `false` | TLS au lieu de SSL |
-| `EMAIL_IGNORE_TLS` | `false` | Ne pas ignorer TLS |
-| `EMAIL_USER` | `votre-email@gmail.com` | Utilisateur SMTP |
-| `EMAIL_PASSWORD` | `mot-de-passe-app` | Mot de passe d'application Gmail |
+> ⚠️ **DigitalOcean bloque les ports SMTP sortants 25, 465 et 587 sur tous les Droplets**
+> ([documentation DigitalOcean](https://docs.digitalocean.com/support/why-is-smtp-blocked/)).
+> Gmail (`smtp.gmail.com:587`) ne peut donc **pas** fonctionner depuis EasyPanel sur DigitalOcean.
+> Utilisez un fournisseur d'emails transactionnels joignable sur le port **2525**, par exemple
+> **Brevo** (offre gratuite : 300 emails/jour), qui le supporte officiellement.
+
+| Variable | Valeur (Brevo) | Description |
+|----------|----------------|-------------|
+| `EMAIL_HOST` | `smtp-relay.brevo.com` | Serveur SMTP |
+| `EMAIL_PORT` | `2525` | Port non bloqué par DigitalOcean |
+| `EMAIL_USER` | *(identifiant SMTP Brevo)* | Brevo > SMTP & API > SMTP |
+| `EMAIL_PASSWORD` | *(clé SMTP Brevo)* | Brevo > SMTP & API > SMTP |
+| `EMAIL_FROM` | `no-reply@votredomaine.com` | Doit être un expéditeur ou un domaine **vérifié** dans Brevo |
+
+`EMAIL_SECURE` et `EMAIL_IGNORE_TLS` sont déduits automatiquement (STARTTLS dès qu'un vrai
+serveur est configuré, SSL implicite si `EMAIL_PORT=465`) : ne les définissez que pour forcer
+une valeur. Au démarrage, les logs indiquent `[mail] SMTP OK` ou `!! [mail] SMTP check FAILED`
+avec la cause probable.
 
 #### Variables optionnelles
 
@@ -78,6 +87,7 @@ Dans les paramètres du service `app`, ajoutez ces variables :
 | `DB_POOL_SIZE` | `10` | Taille du pool de connexions |
 | `SESSION_LIFETIME` | `86400` | Durée de session en secondes (24h) |
 | `HTTPS_PORT` | `443` | Port HTTPS (laisser 443) |
+| `WORKER_COUNT` | `2` | Processus Node.js du backend. Tous les services partagent le conteneur (et souvent le Droplet avec Postgres) : n'augmentez que si le Droplet a ≥ 4 Go de RAM |
 
 ### 5. Configurer le domaine
 
@@ -99,7 +109,9 @@ Dans **Volumes** du service `app`, ajoutez :
 
 > ⚠️ **IMPORTANT** : Le volume `/etc/secrets` contient les clés de chiffrement.
 > Si ce volume est perdu, les formulaires web Enketo ne fonctionneront plus correctement.
-> Sauvegardez ce volume régulièrement.
+> Sauvegardez ce volume régulièrement. Sans montage persistant, Docker crée des volumes
+> anonymes perdus à chaque redéploiement : le démarrage l'affiche alors dans les logs
+> (`!! WARNING: /etc/secrets is not a persistent volume`).
 
 ### 7. Déployer
 
@@ -114,6 +126,12 @@ Une fois déployé, vérifiez :
 1. **Frontend** : `https://agr-collect.votredomaine.com` → page de connexion
 2. **API** : `https://agr-collect.votredomaine.com/v1/projects` → réponse JSON
 3. **Connexion** : Utilisez `ADMIN_EMAIL` / `ADMIN_PASSWORD` pour vous connecter
+4. **Logs** : `[mail] SMTP OK` et aucun `!! WARNING` sur les volumes
+5. **Utilisateur web** : Utilisateurs > Nouveau. Sans mot de passe, l'utilisateur reçoit un
+   email d'activation ; avec un mot de passe initial (10 caractères min.), il peut se
+   connecter immédiatement (utile tant que le SMTP n'est pas configuré)
+6. **Formulaire** : créez un projet et importez un XLSForm (`.xlsx` ou `.xls`) ; le formulaire
+   doit se publier et s'ouvrir en aperçu web (Enketo)
 
 ---
 

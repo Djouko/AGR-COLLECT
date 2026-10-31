@@ -131,7 +131,7 @@ describe('api: /users', () => {
                 const email = global.inbox.pop();
                 global.inbox.length.should.equal(0);
                 email.to.should.eql([{ address: 'david@getodk.org', name: '' }]);
-                email.subject.should.equal('ODK Central account created');
+                email.subject.should.equal('Compte AGR-Collect créé');
               }))));
 
         it('should not send a token which can reset the new user password', testService((service) =>
@@ -191,7 +191,7 @@ describe('api: /users', () => {
                 const email = global.inbox.pop();
                 global.inbox.length.should.equal(0);
                 email.to.should.eql([{ address: 'david@getodk.org', name: '' }]);
-                email.subject.should.equal('ODK Central account created');
+                email.subject.should.equal('Compte AGR-Collect créé');
               }))));
 
         it('should send a token which can reset the new user password', testService((service) =>
@@ -228,7 +228,7 @@ describe('api: /users', () => {
               .send({ email: 'david@getodk.org', password: 'daviddavid' })
               .expect(200)
               .then(() => {
-                /Your account was created with an assigned password\./
+                /avec un mot de passe prédéfini\./
                   .test(global.inbox.pop().html)
                   .should.equal(true);
               }))));
@@ -305,8 +305,8 @@ describe('api: /users', () => {
                       const email = global.inbox.pop();
                       global.inbox.length.should.equal(0);
                       email.to.should.eql([{ address: 'chelsea@getodk.org', name: '' }]);
-                      email.subject.should.equal('ODK Central account password reset');
-                      email.html.should.match(/account has been deleted/);
+                      email.subject.should.equal('Réinitialisation du mot de passe AGR-Collect');
+                      email.html.should.match(/le compte associé a été <strong>supprimé<\/strong>/);
                     })))))));
 
         it('should send an email with a token which can reset the user password', testService((service) =>
@@ -317,7 +317,7 @@ describe('api: /users', () => {
               const email = global.inbox.pop();
               global.inbox.length.should.equal(0);
               email.to.should.eql([{ address: 'alice@getodk.org', name: '' }]);
-              email.subject.should.equal('ODK Central account password reset');
+              email.subject.should.equal('Réinitialisation du mot de passe AGR-Collect');
               const token = /token=([a-z0-9!$]+)/i.exec(email.html)[1];
 
               return service.post('/v1/users/reset/verify')
@@ -397,7 +397,7 @@ describe('api: /users', () => {
                 const email = global.inbox.pop();
                 global.inbox.length.should.equal(0);
                 email.to.should.eql([{ address: 'bob@getodk.org', name: '' }]);
-                email.subject.should.equal('ODK Central account password reset');
+                email.subject.should.equal('Réinitialisation du mot de passe AGR-Collect');
 
                 return service.post('/v1/sessions')
                   .send({ email: 'bob@getodk.org', password: 'password4bob' })
@@ -662,8 +662,8 @@ describe('api: /users', () => {
                 const email = global.inbox.pop();
                 global.inbox.length.should.equal(0);
                 email.to.should.eql([{ address: 'alice@getodk.org', name: '' }]);
-                email.subject.should.equal('ODK Central account email changed');
-                email.html.should.equal('<html>Hello!<p><p>We are emailing because you have an ODK Central account, and somebody has just changed the email address associated with the account from this one you are reading right now (alice@getodk.org) to a new address (david123@getodk.org).</p><p>If this is expected, you can ignore this email. If it is not expected, please contact your ODK system administrator immediately.</p></html>');
+                email.subject.should.equal('Email du compte AGR-Collect modifié');
+                email.html.should.match(/a été modifiée de <strong>alice@getodk.org<\/strong> vers <strong>david123@getodk.org<\/strong>/);
               })))));
     }
 
@@ -802,7 +802,7 @@ describe('api: /users', () => {
                   const email = global.inbox.pop();
                   global.inbox.length.should.equal(0);
                   email.to.should.eql([{ address: 'alice@getodk.org', name: '' }]);
-                  email.subject.should.equal('ODK Central account password change');
+                  email.subject.should.equal('Mot de passe AGR-Collect modifié');
                 })))));
 
         it('should log an audit on password change', testService((service, { Audits, Users }) =>

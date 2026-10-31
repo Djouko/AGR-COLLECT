@@ -7,9 +7,9 @@
 // including this file, may be copied, modified, propagated, or distributed
 // except according to the terms contained in the LICENSE file.
 
-// Ramda functions - note: 'always' was removed as it's no longer needed
+const { always } = require('ramda');
 const { User } = require('../model/frames');
-const { verifyPassword, hashPassword } = require('../util/crypto');
+const { verifyPassword } = require('../util/crypto');
 const { success, isTrue } = require('../util/http');
 const Option = require('../util/option');
 const Problem = require('../util/problem');
@@ -31,35 +31,15 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
     ])
       .then(([ exact, list ]) => exact.map((x) => [ x ]).orElse(list.orElse([])))));
 
-  // Fire-and-forget mail send. The user record has already been written at the
-  // point this is invoked, so we must not block the HTTP response on SMTP —
-  // otherwise a misconfigured or unreachable mail server turns every user
-  // creation into a 504 (reverse proxies typically cut the request at 60s while
-  // nodemailer's default socket timeout is 120s+). The mail is started in the
-  // background and any error is logged to stderr without ever being propagated.
-  const sendMailInBackground = (mailFactory, context) => {
-    try {
-      const p = mailFactory();
-      if (p && typeof p.catch === 'function') {
-        p.catch((err) => {
-          process.stderr.write(`!! mail send failed for ${context}: ${err && err.message ? err.message : err}\n`);
-        });
-      }
-    } catch (err) {
-      process.stderr.write(`!! mail send threw synchronously for ${context}: ${err && err.message ? err.message : err}\n`);
-    }
-  };
-
   if (oidc.isEnabled()) {
     // Same as non-OIDC, except that password is random & unguessable
     service.post('/users', endpoint(({ Users, mail }, { body, auth }) =>
       auth.canOrReject('user.create', User.species)
         .then(() => User.fromApi(body).forV1OnlyCopyEmailToDisplayName())
         .then(Users.create)
-        .then((savedUser) => {
-          sendMailInBackground(() => mail(savedUser.email, 'accountCreatedForOidc'), `accountCreatedForOidc:${savedUser.email}`);
-          return savedUser;
-        })));
+        .then((savedUser) =>
+          mail(savedUser.email, 'accountCreatedForOidc')
+            .then(always(savedUser)))));
   } else {
     service.post('/users', endpoint(({ Users, mail }, { body, auth }) =>
       auth.canOrReject('user.create', User.species)
@@ -67,18 +47,10 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
         .then(Users.create)
         .then((savedUser) => (isPresent(body.password)
           ? Users.updatePassword(savedUser, body.password)
-            .then(() => {
-              sendMailInBackground(() => mail(savedUser.email, 'accountCreatedWithPassword'), `accountCreatedWithPassword:${savedUser.email}`);
-              return savedUser;
-            })
-          : hashPassword(savedUser.email)
-            .then((emailPasswordHash) => Users.updatePassword(savedUser, savedUser.email))
-            .then(() => Users.provisionPasswordResetToken(savedUser))
-            .then((token) => {
-              // Set temporary password = email for fallback if SMTP fails
-              sendMailInBackground(() => mail(savedUser.email, 'accountCreated', { token }), `accountCreated:${savedUser.email}`);
-              return savedUser;
-            })))))
+            .then(() => mail(savedUser.email, 'accountCreatedWithPassword'))
+          : Users.provisionPasswordResetToken(savedUser)
+            .then((token) => mail(savedUser.email, 'accountCreated', { token })))
+          .then(always(savedUser)))));
 
     const endpointByInvalidateQuery = (cb) => (req, ...rest) =>
       (isTrue(req.query.invalidate) ? endpoint(cb) : anonymousEndpoint(cb))(req, ...rest);
@@ -91,22 +63,16 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
             ? auth.canOrReject('user.password.invalidate', user.actor)
               .then(() => Users.invalidatePassword(user))
             : resolve(user))
-            .then(() => Users.updatePassword(user, user.email))
-            .then(() => Users.provisionPasswordResetToken(user))
-            .then((token) => {
-              // Reset password to email as fallback if SMTP fails
-              sendMailInBackground(() => mail(body.email, 'accountReset', { token }), `accountReset:${body.email}`);
-            })))
+            .then(() => Users.provisionPasswordResetToken(user)
+              .then((token) => mail(body.email, 'accountReset', { token }))))
           .orElseGet(() => ((isTrue(query.invalidate))
             ? auth.canOrReject('user.password.invalidate', User.species)
             : resolve())
             .then(() => Users.emailEverExisted(body.email)
-              .then((existed) => {
-                if (existed === true) {
-                  sendMailInBackground(() => mail(body.email, 'accountResetDeleted'), `accountResetDeleted:${body.email}`);
-                }
-              })))))
-        .then(success))));
+              .then((existed) => ((existed === true)
+                ? mail(body.email, 'accountResetDeleted')
+                : resolve()))))
+          .then(success)))));
 
     // TODO: some standard URL structure for RPC-style methods.
     service.post('/users/reset/verify', endpoint(({ Actors, Sessions, Users }, { body, auth }) =>
@@ -138,8 +104,7 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
           auth.session.map(({ token }) => token).orNull()
         )
       ]);
-      // Fire-and-forget: don't block HTTP response on SMTP
-      sendMailInBackground(() => mail(user.email, 'accountPasswordChanged'), `accountPasswordChanged:${user.email}`);
+      await mail(user.email, 'accountPasswordChanged');
       return success();
     }));
   }
@@ -151,9 +116,7 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
       return user;
     }
     const [ verbs, preferences ] = await Promise.all([ Auth.verbsOn(user.actorId, '*'), UserPreferences.getForUser(user.actorId) ]);
-    // Construire explicitement l'objet de retour avec verbs et preferences
-    const userApi = user.forApi();
-    return { ...userApi, verbs: verbs || [], preferences: preferences || {} };
+    return Object.assign({ verbs, preferences }, user.forApi());
   }));
 
   // Gets full details of a user by actor id.
@@ -187,16 +150,10 @@ module.exports = (service, endpoint, anonymousEndpoint) => {
         })
         .then((filteredBody) => User.fromApi(filteredBody))
         .then((patchData) => Users.update(user, patchData)
-          .then((result) => {
-            if (isPresent(patchData.email) && patchData.email !== user.email) {
-              // Fire-and-forget: don't block HTTP response on SMTP
-              sendMailInBackground(
-                () => mail(user.email, 'accountEmailChanged', { oldEmail: user.email, newEmail: patchData.email }),
-                `accountEmailChanged:${user.email}`
-              );
-            }
-            return result;
-          })))));
+          .then((result) => ((isPresent(patchData.email) && (patchData.email !== user.email))
+            ? mail(user.email, 'accountEmailChanged', { oldEmail: user.email, newEmail: patchData.email })
+            : resolve())
+            .then(always(result)))))));
 
   service.delete('/users/:id', endpoint(({ Actors, Users }, { params, auth }) =>
     Users.getByActorId(params.id)

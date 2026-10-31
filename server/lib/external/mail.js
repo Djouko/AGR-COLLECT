@@ -15,7 +15,7 @@ const { messages } = require('../formats/mail');
 const simpleTransport = (transport, options, callback) => (to, messageId, data) =>
   new Promise((resolve, reject) => {
     transport.sendMail(mergeRight({ to, from: options.serviceAccount }, messages[messageId](data, options.env)), (err, info) =>
-      callback(err, info, resolve, reject));
+      callback(err, info, resolve, reject, { to, messageId }));
   });
 
 // actual mail transport stuffs. does some wrapping work to smooth over some
@@ -28,10 +28,17 @@ const sendmail = (options) => {
   });
 };
 // TODO: extremely similar to the above.
+// AGR-Collect: an SMTP failure is logged instead of failing the request, so
+// that accounts are still created when the mail server is unreachable (admins
+// can then set an initial password). The transport timeouts set in
+// config.json.template bound how long a request can wait on SMTP.
 const smtp = (options) => {
   const transport = nodemailer.createTransport(options.transportOpts);
-  return simpleTransport(transport, options, (err, info, resolve, reject) => {
-    if (err != null) return reject(err);
+  return simpleTransport(transport, options, (err, info, resolve, reject, { to, messageId }) => {
+    if (err != null) {
+      process.stderr.write(`!! mail send failed for ${messageId}:${to} via ${options.transportOpts.host}:${options.transportOpts.port}: ${err.code || ''} ${err.message}\n`);
+      return resolve(null);
+    }
     return resolve(info);
   });
 };

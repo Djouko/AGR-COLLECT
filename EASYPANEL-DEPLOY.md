@@ -46,7 +46,7 @@ Traefik reverse proxy.
 
 1. **Create Service > Dockerfile**.
 2. Source: link this repository, branch `master` (or a tagged release).
-3. Build context: `central/` (the folder that contains the `Dockerfile`).
+3. Build context: `/` (the `Dockerfile` is at the root of the `AGR-COLLECT` repository).
 4. Dockerfile path: `Dockerfile` (relative to that context).
 
 ---
@@ -65,14 +65,15 @@ Traefik reverse proxy.
 | `DB_NAME`            | **yes**   | `odk`                                   |                                                                                           |
 | `DB_SSL`             | no        | `null`                                  | Keep `null` for the internal EasyPanel network.                                           |
 | `ADMIN_EMAIL`        | no        | `admin@saahdel.org`                     | Default `admin@agr-collect.local`. Created on first boot.                                 |
-| `ADMIN_PASSWORD`     | no        | `(use a strong one)`                    | Default `agrcollect2025` - **change this in production**.                                 |
-| `EMAIL_HOST`         | *strong recommendation* | `smtp.gmail.com`          | If left at the default `localhost`, activation emails will not be delivered.              |
-| `EMAIL_PORT`         | no        | `587`                                   | `465` if using SSL.                                                                       |
-| `EMAIL_SECURE`       | no        | `false`                                 | `true` if port is 465.                                                                    |
-| `EMAIL_IGNORE_TLS`   | no        | `false`                                 | Keep `false` for real SMTP.                                                               |
-| `EMAIL_USER`         | no        | `no-reply@saahdel.org`                  | SMTP username.                                                                            |
-| `EMAIL_PASSWORD`     | no        | -                                       | Gmail app password or SMTP password.                                                      |
-| `EMAIL_FROM`         | no        | `no-reply@saahdel.org`                  | Defaults to `no-reply@${DOMAIN}`.                                                         |
+| `ADMIN_PASSWORD`     | **yes**   | `(use a strong one)`                    | Falls back to the publicly documented `agrcollect2025` (a boot warning is printed).       |
+| `EMAIL_HOST`         | *strong recommendation* | `smtp-relay.brevo.com`    | If left at the default `localhost`, activation emails will not be delivered.              |
+| `EMAIL_PORT`         | no        | `2525`                                  | DigitalOcean blocks 25, 465 and 587 on every Droplet: use a provider that accepts 2525.   |
+| `EMAIL_SECURE`       | no        | auto                                    | Defaults to `true` only when `EMAIL_PORT=465`.                                            |
+| `EMAIL_IGNORE_TLS`   | no        | auto                                    | Defaults to `false` (STARTTLS) whenever `EMAIL_HOST` is not `localhost`.                  |
+| `EMAIL_USER`         | no        | -                                       | SMTP login (Brevo: SMTP & API > SMTP).                                                    |
+| `EMAIL_PASSWORD`     | no        | -                                       | SMTP key/password.                                                                        |
+| `EMAIL_FROM`         | no        | `no-reply@saahdel.org`                  | Defaults to `no-reply@${DOMAIN}`. Must be a sender/domain verified with the provider.     |
+| `WORKER_COUNT`       | no        | `2`                                     | Backend Node.js processes. Raise only on a Droplet with 4 GB+ RAM.                        |
 | `OIDC_ENABLED`       | no        | `false`                                 | Keep `false` unless you operate an OIDC provider.                                         |
 | `OIDC_ISSUER_URL`    | no        | -                                       | Required only if `OIDC_ENABLED=true`.                                                     |
 | `OIDC_CLIENT_ID`     | no        | -                                       | Required only if `OIDC_ENABLED=true`.                                                     |
@@ -154,12 +155,11 @@ Run the following checks once the container is healthy:
    ```
    Must return 200.
 3. **Admin login**: log in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
-4. **Create a web user**: Users > New. With no SMTP configured, expect:
-   - A success toast in the UI.
-   - A line `!! mail send failed for accountCreated:<email>` in the container logs.
-   - The user appearing in the list. Set a password manually through
-     "Reset password" once SMTP is configured, or share the reset link
-     from the logs.
+4. **Create a web user**: Users > New. Leave the password empty to send
+   an activation email, or set an initial password (10+ characters) so the
+   user can sign in right away (needed while SMTP is not configured). The
+   logs must show `[mail] SMTP OK` at boot; a failed delivery logs
+   `!! mail send failed for accountCreated:<email>`.
 5. **Create a project and upload a form (XLSX)**. The form must
    publish, indicated by a non-null Enketo id in the form row.
 6. **Download the form with ODK Collect on a phone** and submit one
@@ -179,9 +179,9 @@ step number above.
 
 ## 8. Known non-blocking items
 
-- **Password-reset emails** require an SMTP configuration. Without it,
-  user accounts are still created but invitation links only appear in
-  the container logs (grep for `mail send failed`).
+- **Activation and password-reset emails** require an SMTP configuration
+  reachable from the Droplet (port 2525). Without it, create users with an
+  initial password.
 - **Push notifications to field agents** when admins review their
   submissions is **not yet implemented** (tracked as P4). Agents must
   re-open ODK Collect and sync to see new comments / review states.
@@ -208,4 +208,6 @@ at startup (`start-odk.sh` -> `node ./lib/bin/run-migrations`).
 | "The Enketo service returned an unexpected response (code 500.4)"      | Enketo cannot reach Central's public domain from inside container  | Already fixed in submissions.js -> uses `internalDomain` for Enketo <-> Central calls. Ensure the deployed commit contains `P3`.       |
 | Can't log in on first boot                                             | Default admin password was changed by `ADMIN_PASSWORD` env var     | Use the value you set.                                                                                                                  |
 | "Forms are missing" after a rebuild                                    | Redis volume was lost, so Enketo survey IDs became stale           | The start script auto-clears stale IDs on first boot (`/var/lib/redis/.enketo-initialized` marker) and re-queues publish events.        |
-| Activation email never arrives                                         | SMTP not configured                                                | Set `EMAIL_HOST/PORT/USER/PASSWORD` env vars (see §3).                                                                                 |
+| Activation email never arrives                                         | SMTP not configured, or port 25/465/587 blocked by DigitalOcean    | Read the `[mail] SMTP check` line at boot; use a provider on port 2525 (see §3).                                                       |
+| `!! WARNING: /etc/secrets is not a persistent volume`                  | Volume mounts missing (Docker created anonymous volumes)           | Add the mounts of §5, then redeploy.                                                                                                   |
+| Container restarted every few minutes                                  | Healthcheck failing (nginx or backend down)                        | Check the logs for the failing supervisord program.                                                                                    |

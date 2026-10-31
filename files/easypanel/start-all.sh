@@ -40,12 +40,32 @@ export DB_POOL_SIZE="${DB_POOL_SIZE:-10}"
 export EMAIL_FROM="${EMAIL_FROM:-no-reply@${DOMAIN}}"
 export EMAIL_HOST="${EMAIL_HOST:-localhost}"
 export EMAIL_PORT="${EMAIL_PORT:-25}"
-export EMAIL_SECURE="${EMAIL_SECURE:-false}"
-export EMAIL_IGNORE_TLS="${EMAIL_IGNORE_TLS:-true}"
+# Port 465 is implicit TLS; every other port negotiates STARTTLS.
+if [ "${EMAIL_PORT}" = "465" ]; then
+    export EMAIL_SECURE="${EMAIL_SECURE:-true}"
+else
+    export EMAIL_SECURE="${EMAIL_SECURE:-false}"
+fi
+# STARTTLS may only be skipped for the local, unauthenticated relay: real
+# providers (Brevo, SendGrid, Gmail...) refuse AUTH over a plaintext channel.
+if [ "${EMAIL_HOST}" = "localhost" ]; then
+    export EMAIL_IGNORE_TLS="${EMAIL_IGNORE_TLS:-true}"
+else
+    export EMAIL_IGNORE_TLS="${EMAIL_IGNORE_TLS:-false}"
+fi
 export EMAIL_USER="${EMAIL_USER:-}"
 export EMAIL_PASSWORD="${EMAIL_PASSWORD:-}"
 
+# Backend worker processes. All services share this container (and usually the
+# Droplet with Postgres and EasyPanel), so default to 2 instead of the upstream
+# memory-based value. Override with WORKER_COUNT.
+export WORKER_COUNT="${WORKER_COUNT:-2}"
+
 export ADMIN_EMAIL="${ADMIN_EMAIL:-admin@agr-collect.local}"
+if [ -z "${ADMIN_PASSWORD:-}" ]; then
+    echo "  !! WARNING: ADMIN_PASSWORD is not set: the publicly documented default"
+    echo "  !! password is used if the admin account has to be created. Set it in EasyPanel."
+fi
 export ADMIN_PASSWORD="${ADMIN_PASSWORD:-agrcollect2025}"
 
 export SENTRY_ORG_SUBDOMAIN="${SENTRY_ORG_SUBDOMAIN:-o130137}"
@@ -83,20 +103,27 @@ if [ "${EMAIL_HOST}" = "localhost" ]; then
     echo "  ================================================================"
     echo "  !! WARNING: EMAIL_HOST is still 'localhost' (default)."
     echo "  !! Activation and password-reset emails will NOT be delivered."
-    echo "  !! User accounts will be created, but invitation links will only"
-    echo "  !! appear in the backend logs (grep for 'password reset' or"
-    echo "  !! 'mail send failed'). To enable real email delivery set these"
-    echo "  !! EasyPanel environment variables:"
-    echo "  !!   EMAIL_HOST=smtp.gmail.com      (or your SMTP provider)"
-    echo "  !!   EMAIL_PORT=587                 (or 465 for SSL)"
-    echo "  !!   EMAIL_SECURE=false             (true if port 465)"
-    echo "  !!   EMAIL_IGNORE_TLS=false"
-    echo "  !!   EMAIL_USER=<smtp-user>"
-    echo "  !!   EMAIL_PASSWORD=<smtp-password-or-app-password>"
-    echo "  !!   EMAIL_FROM=no-reply@your-domain.com"
+    echo "  !! New web users can then sign in only if the admin sets an initial"
+    echo "  !! password when creating them. DigitalOcean blocks outbound ports 25, 465 and 587,"
+    echo "  !! so use a provider reachable on port 2525, e.g. Brevo:"
+    echo "  !!   EMAIL_HOST=smtp-relay.brevo.com"
+    echo "  !!   EMAIL_PORT=2525"
+    echo "  !!   EMAIL_USER=<brevo-smtp-login>"
+    echo "  !!   EMAIL_PASSWORD=<brevo-smtp-key>"
+    echo "  !!   EMAIL_FROM=<sender verified in Brevo>"
     echo "  ================================================================"
     echo ""
 fi
+
+# Docker only gives VOLUME paths anonymous volumes, which EasyPanel drops on
+# every redeploy: Enketo secrets and Redis data would then be lost each time.
+for dir in /etc/secrets /var/lib/redis; do
+    mount_root=$(awk -v d="$dir" '$5 == d { print $4 }' /proc/self/mountinfo)
+    if [ -z "$mount_root" ] || echo "$mount_root" | grep -Eq '/volumes/[0-9a-f]{64}/_data$'; then
+        echo "  !! WARNING: $dir is not a persistent volume. Add a volume mount for it"
+        echo "  !! in EasyPanel (Service > Mounts), see EASYPANEL-DEPLOY.md section 5."
+    fi
+done
 
 # ---- 2. Generate secrets if not exist ----
 echo "[1/7] Checking secrets..."
@@ -181,9 +208,17 @@ done
 # stale Enketo IDs → "survey not found" errors. Detect this via a marker file
 # in the Redis volume and repair automatically.
 ENKETO_MARKER="/var/lib/redis/.enketo-initialized"
+psql_agr() { PGPASSWORD="${DB_PASSWORD}" psql -h "${DB_HOST}" -p "${PGPORT}" -U "${DB_USER}" -d "${DB_NAME}" "$@"; }
 if [ ! -f "$ENKETO_MARKER" ]; then
-    echo "[5/7] Fresh Redis detected - clearing stale Enketo survey IDs..."
-    if PGPASSWORD="${DB_PASSWORD}" psql -h "${DB_HOST}" -p "${PGPORT}" -U "${DB_USER}" -d "${DB_NAME}" -v ON_ERROR_STOP=0 <<'EOSQL'
+    echo "[5/7] Fresh Redis detected - checking for stale Enketo survey IDs..."
+    # The marker is only written once the check succeeded, so a database that
+    # is not reachable yet is checked again on the next start.
+    if ! forms_table=$(psql_agr -tAc "select to_regclass('public.forms')" 2>&1); then
+        echo "  WARNING: database not reachable (${forms_table}); will retry on next start."
+    elif [ -z "$forms_table" ]; then
+        echo "  Fresh database: nothing to repair."
+        touch "$ENKETO_MARKER"
+    elif psql_agr -q -v ON_ERROR_STOP=1 --single-transaction <<'EOSQL'
 -- Clear stale Enketo IDs from published forms
 UPDATE forms SET "enketoId" = NULL, "enketoOnceId" = NULL
   WHERE "enketoId" IS NOT NULL OR "enketoOnceId" IS NOT NULL;
@@ -196,10 +231,10 @@ INSERT INTO audits (action, "acteeId", "loggedAt", processed, claimed, failures)
 EOSQL
     then
         echo "  Enketo IDs cleared. Worker will re-create surveys on startup."
+        touch "$ENKETO_MARKER"
     else
-        echo "  WARNING: Could not clear Enketo IDs (database may be empty). Continuing..."
+        echo "  WARNING: could not clear stale Enketo IDs; will retry on next start."
     fi
-    touch "$ENKETO_MARKER"
 else
     echo "[5/7] Enketo marker found - Redis data should be intact."
 fi

@@ -11,6 +11,12 @@
           :placeholder="$t('field.email')" required autocomplete="off"/>
         <form-group v-model.trim="displayName" type="text"
           :placeholder="$t('field.displayName')" autocomplete="off"/>
+        <template v-if="!config.oidcEnabled">
+          <form-group v-model="password" type="password"
+            :placeholder="$t('field.password')" autocomplete="new-password"
+            minlength="10"/>
+          <p class="help-block">{{ $t('passwordHelp') }}</p>
+        </template>
         <div class="modal-actions">
           <button type="button" class="btn btn-link"
             :aria-disabled="awaitingResponse" @click="$emit('hide')">
@@ -54,7 +60,8 @@ export default {
   data() {
     return {
       email: '',
-      displayName: ''
+      displayName: '',
+      password: ''
     };
   },
   watch: {
@@ -62,6 +69,7 @@ export default {
       if (state) return;
       this.email = '';
       this.displayName = '';
+      this.password = '';
     }
   },
   methods: {
@@ -71,6 +79,7 @@ export default {
     submit() {
       const postData = { email: this.email };
       if (this.displayName !== '') postData.displayName = this.displayName;
+      if (this.password !== '') postData.password = this.password;
       this.request({
         method: 'POST',
         url: '/v1/users',
@@ -100,6 +109,7 @@ export default {
     "oidcIntroduction": [
       "Users on your login server must have a Central account to log in to Central. Once you create this account, the user on your login server with the email address you provide will be able to log in to Central."
     ],
+    "passwordHelp": "Optional. If you set a password (at least 10 characters), the user can sign in with it right away. Otherwise, they will receive an email to choose one.",
     "problem": {
       "409_3": "It looks like {email} already has an account. Please try another email address."
     }
@@ -150,6 +160,7 @@ export default {
     "oidcIntroduction": [
       "Les utilisateurs de votre serveur de connexion doivent avoir un compte Central pour se connecter à Central. Une fois ce compte créé, l'utilisateur de votre serveur de connexion ayant cette adresse de courriel pourra se connecter à Central."
     ],
+    "passwordHelp": "Facultatif. Si vous définissez un mot de passe (10 caractères minimum), l'utilisateur pourra se connecter immédiatement avec celui-ci. Sinon, il recevra un email pour en choisir un.",
     "problem": {
       "409_3": "Il semblerait que {email} dispose déjà d'un compte. Merci d'essayer une autre adresse de courriel."
     }
